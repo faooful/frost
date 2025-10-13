@@ -169,3 +169,14 @@ button:hover {
     background-position: 6px 6px, 2px 2px;
   }
 }
+
+/* Receipt panel monospace font */
+.receipt-mono {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
+  font-size: 11px !important;
+}
+
+.receipt-mono * {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
+  font-size: 11px !important;
+}

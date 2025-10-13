@@ -1,12 +1,22 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Skeleton } from '@/components/ui/skeleton';
+import dynamic from 'next/dynamic';
+
+const PixelBlast = dynamic(() => import('./PixelBlast'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center bg-gray-900">
+      <p className="text-white text-sm font-mono">Loading effect...</p>
+    </div>
+  )
+});
 
 interface LineItem {
   description: string;
   amount: number;
   source?: string; // Which invoice this came from
+  sourceFile?: string; // The actual filename/path
 }
 
 interface Receipt {
@@ -26,7 +36,11 @@ interface Receipt {
   error?: string;
 }
 
-export function ReceiptPanel() {
+interface ReceiptPanelProps {
+  onFileSelect?: (filename: string) => void;
+}
+
+export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [consolidatedLineItems, setConsolidatedLineItems] = useState<LineItem[]>([]);
@@ -34,10 +48,21 @@ export function ReceiptPanel() {
   const [grandTotal, setGrandTotal] = useState(0);
   const [needsReanalysis, setNeedsReanalysis] = useState(false);
   const [cachedFileList, setCachedFileList] = useState<string[]>([]);
+  const [asciiFrame, setAsciiFrame] = useState(0);
 
   useEffect(() => {
     checkCacheAndFetch();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading) return;
+    
+    const interval = setInterval(() => {
+      setAsciiFrame((prev) => (prev + 1) % 8);
+    }, 150);
+
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const checkCacheAndFetch = async () => {
     try {
@@ -48,7 +73,7 @@ export function ReceiptPanel() {
       const cacheData = await cacheResponse.json();
       
       if (cacheData.success && cacheData.data) {
-        // Load cached data immediately for instant display
+        // Load cached data immediately for instant display (no animation)
         const cached = cacheData.data;
         setReceipts(cached.receipts || []);
         setConsolidatedLineItems(cached.consolidatedLineItems || []);
@@ -86,6 +111,10 @@ export function ReceiptPanel() {
   };
 
   const fetchAndCacheReceipts = async () => {
+    // Show the animation for at least 3 seconds (gives time for PixelBlast to load)
+    const startTime = Date.now();
+    const minDisplayTime = 3000;
+    
     try {
       setIsLoading(true);
       setNeedsReanalysis(false);
@@ -107,7 +136,8 @@ export function ReceiptPanel() {
             receipt.invoiceData.lineItems.forEach(item => {
               allLineItems.push({
                 ...item,
-                source: receipt.invoiceData.invoiceNumber || receipt.filename
+                source: receipt.invoiceData.invoiceNumber || receipt.filename,
+                sourceFile: receipt.filename
               });
             });
           }
@@ -149,44 +179,44 @@ export function ReceiptPanel() {
     } catch (error) {
       console.error('Error fetching receipts:', error);
     } finally {
+      // Ensure animation shows for minimum time
+      const elapsed = Date.now() - startTime;
+      const remainingTime = minDisplayTime - elapsed;
+      
+      if (remainingTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, remainingTime));
+      }
+      
       setIsLoading(false);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="h-full flex flex-col p-6 overflow-y-auto">
-        {/* Skeleton Header */}
-        <div className="mb-6 pb-4 border-b-2 border-gray-600">
-          <Skeleton className="h-8 w-64 mb-2 bg-gray-700" />
-          <Skeleton className="h-4 w-32 bg-gray-700" />
+      <div className="h-full w-full relative overflow-hidden bg-gray-900">
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <PixelBlast
+            variant="circle"
+            pixelSize={6}
+            color="#B19EEF"
+            patternScale={3}
+            patternDensity={1.2}
+            pixelSizeJitter={0.5}
+            enableRipples={true}
+            rippleSpeed={0.4}
+            rippleThickness={0.12}
+            rippleIntensityScale={1.5}
+            liquid={true}
+            liquidStrength={0.12}
+            liquidRadius={1.2}
+            liquidWobbleSpeed={5}
+            speed={0.6}
+            edgeFade={0.25}
+            transparent={true}
+          />
         </div>
-        
-        {/* Skeleton Line Items */}
-        <div className="flex-1 mb-6">
-          <Skeleton className="h-4 w-24 mb-3 bg-gray-700" />
-          <div className="space-y-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="flex justify-between items-start py-2 border-b border-gray-700/50">
-                <div className="flex-1">
-                  <Skeleton className="h-4 w-3/4 mb-2 bg-gray-700" />
-                  <Skeleton className="h-3 w-1/3 bg-gray-700" />
-                </div>
-                <Skeleton className="h-4 w-16 ml-4 bg-gray-700" />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Skeleton Totals */}
-        <div className="mt-auto pt-6 border-t-2 border-gray-600">
-          <div className="space-y-3">
-            <Skeleton className="h-5 w-full bg-gray-700" />
-            <Skeleton className="h-5 w-full bg-gray-700" />
-            <div className="pt-3 mt-3 border-t-2 border-gray-600">
-              <Skeleton className="h-10 w-full bg-gray-700" />
-            </div>
-          </div>
+        <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 10, pointerEvents: 'none' }}>
+          <p className="text-white text-sm font-mono">Analyzing receipts...</p>
         </div>
       </div>
     );
@@ -202,20 +232,20 @@ export function ReceiptPanel() {
   }
 
   return (
-    <div className="h-full flex flex-col p-6 overflow-y-auto">
+    <div className="h-full flex flex-col p-6 overflow-y-auto receipt-mono">
       {/* Re-analysis Banner */}
       {needsReanalysis && (
-        <div className="mb-4 p-4 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
+        <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="text-sm font-semibold text-yellow-400 mb-1">📄 New PDFs detected</p>
-              <p className="text-xs text-yellow-200/80">
+              <p className="font-semibold text-yellow-400 mb-1">📄 New PDFs detected</p>
+              <p className="text-yellow-200/80">
                 New invoice files have been added to the data folder. Re-analyze to include them in the receipt.
               </p>
             </div>
             <button
               onClick={fetchAndCacheReceipts}
-              className="ml-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded transition-colors"
+              className="ml-4 px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded transition-colors"
             >
               Re-analyze
             </button>
@@ -223,43 +253,59 @@ export function ReceiptPanel() {
         </div>
       )}
 
-      {/* Receipt Header */}
-      <div className="mb-6 pb-4 border-b-2 border-gray-600">
-        <h2 className="text-2xl font-bold text-white mb-2">CONSOLIDATED RECEIPT</h2>
-        <p className="text-sm text-gray-400">{receipts.length} invoice{receipts.length !== 1 ? 's' : ''} combined</p>
-      </div>
-      
       {/* All Line Items */}
       <div className="flex-1 mb-6">
-        <h3 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-wide">All Line Items</h3>
-        
         {consolidatedLineItems.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {consolidatedLineItems.map((item, index) => (
-              <div key={index} className="flex justify-between items-start py-2 border-b border-gray-700/50">
+              <div key={index} className="flex justify-between items-start py-1">
                 <div className="flex-1">
-                  <p className="text-sm text-gray-200">{item.description}</p>
+                  <p className="text-gray-200">{item.description}</p>
                   {item.source && (
-                    <p className="text-xs text-gray-500 mt-1">from: {item.source}</p>
+                    <p className="text-gray-500 mt-0.5">
+                      {item.sourceFile && onFileSelect ? (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onFileSelect(item.sourceFile!);
+                          }}
+                          style={{ 
+                            all: 'unset', 
+                            color: '#6b7280',
+                            textDecoration: 'underline', 
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            fontSize: 'inherit'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.color = '#9ca3af'}
+                          onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}
+                        >
+                          {item.source}
+                        </button>
+                      ) : (
+                        item.source
+                      )}
+                    </p>
                   )}
                 </div>
-                <p className="text-sm font-medium text-white ml-4">£{item.amount.toFixed(2)}</p>
+                <p className="text-white ml-4">£{item.amount.toFixed(2)}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500 italic">No line items could be extracted from the invoices</p>
+          <p className="text-gray-500 italic">No line items could be extracted from the invoices</p>
         )}
       </div>
 
       {/* Totals Section */}
-      <div className="mt-auto pt-6 border-t-2 border-gray-600">
-        <div className="space-y-3">
+      <div className="mt-auto pt-4">
+        <div className="space-y-1">
           {/* Subtotal - calculated from line items */}
           {consolidatedLineItems.length > 0 && (
-            <div className="flex justify-between text-base">
+            <div className="flex justify-between">
               <span className="text-gray-400">Subtotal ({consolidatedLineItems.length} items):</span>
-              <span className="text-white font-medium">
+              <span className="text-white">
                 £{consolidatedLineItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
               </span>
             </div>
@@ -267,36 +313,19 @@ export function ReceiptPanel() {
           
           {/* VAT */}
           {totalVAT > 0 && (
-            <div className="flex justify-between text-base">
+            <div className="flex justify-between">
               <span className="text-gray-400">Total VAT:</span>
-              <span className="text-white font-medium">£{totalVAT.toFixed(2)}</span>
+              <span className="text-white">£{totalVAT.toFixed(2)}</span>
             </div>
           )}
           
           {/* Grand Total */}
-          <div className="pt-3 mt-3 border-t-2 border-gray-600">
-            <div className="flex justify-between items-center">
-              <span className="text-xl font-semibold text-gray-200">TOTAL:</span>
-              <span className="text-3xl font-bold text-green-400">
-                £{grandTotal.toFixed(2)}
-              </span>
-            </div>
+          <div className="flex justify-between pt-2">
+            <span className="text-gray-200">TOTAL:</span>
+            <span className="text-green-400">
+              £{grandTotal.toFixed(2)}
+            </span>
           </div>
-        </div>
-      </div>
-
-      {/* Invoice Sources Reference */}
-      <div className="mt-4 p-3 bg-gray-800/50 rounded-lg">
-        <p className="text-xs text-gray-500 mb-2">Sources:</p>
-        <div className="space-y-1">
-          {receipts.map((receipt, index) => (
-            <p key={index} className="text-xs text-gray-400">
-              • {receipt.invoiceData.invoiceNumber ? `Invoice #${receipt.invoiceData.invoiceNumber}` : receipt.filename}
-              {receipt.invoiceData.totalAmount && (
-                <span className="text-gray-500 ml-2">(£{receipt.invoiceData.totalAmount.toFixed(2)})</span>
-              )}
-            </p>
-          ))}
         </div>
       </div>
     </div>
