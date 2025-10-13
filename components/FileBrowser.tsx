@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { FileInfo, formatFileSize, getFileIcon } from '@/lib/clientUtils';
 import { FileEditor } from './FileEditor';
-import { InsightsPanel } from './InsightsPanel';
+import { ReceiptPanel } from './ReceiptPanel';
 import { CacheManager } from './CacheManager';
 import { NewAnalysisPanel } from './NewAnalysisPanel';
 import { FileDeleteConfirmationPanel } from './FileDeleteConfirmationPanel';
@@ -548,7 +548,7 @@ export function FileBrowser({ folderPath = 'data' }: FileBrowserProps) {
           }}
         >
           {/* File Editor */}
-          <div className={`${expandedColumn === 'file-editor' || (cachedAnalyses.length === 0 && !isAnalyzing) ? 'w-full' : 'w-1/2'} flex flex-col`} style={{ display: expandedColumn === 'ai-insights' ? 'none' : 'flex', borderRight: expandedColumn !== 'file-editor' && (cachedAnalyses.length > 0 || isAnalyzing) ? '1px solid #2E2E2E' : 'none', height: '100%', minHeight: 0 }}>
+          <div className={`${expandedColumn === 'file-editor' ? 'w-full' : 'w-1/2'} flex flex-col`} style={{ display: expandedColumn === 'receipts' ? 'none' : 'flex', borderRight: expandedColumn !== 'file-editor' ? '1px solid #2E2E2E' : 'none', height: '100%', minHeight: 0 }}>
             <div className="mb-4" style={{ borderBottom: '1px solid #2E2E2E', marginBottom: '8px', minHeight: '32px', paddingLeft: '12px', paddingRight: '12px' }}>
               <div className="flex justify-between items-center h-full">
                 <h2 style={{ 
@@ -648,52 +648,25 @@ export function FileBrowser({ folderPath = 'data' }: FileBrowserProps) {
                 }}
               />
                     </div>
-                  </div>
-
-          {/* AI Insights Section */}
-          <div className={`${expandedColumn === 'ai-insights' ? "w-full" : "w-1/2"} flex flex-col`} style={{ display: expandedColumn !== 'file-editor' && selectedFile && (cachedAnalyses.length > 0 || isAnalyzing) ? 'flex' : 'none', height: '100%', minHeight: 0 }}>
-            <div className="mb-4" style={{ borderBottom: '1px solid #2E2E2E', marginBottom: '8px', minHeight: '32px', paddingRight: '12px' }}>
-              <div className="flex justify-between items-center h-full">
-                <div className="flex items-center space-x-4">
-                  {cachedAnalyses.length > 0 && (
-                    <div className="flex">
-                      {cachedAnalyses.map((cached, index) => (
-                        <div
-                          key={cached.id}
-                          onClick={() => setActiveAnalysisId(cached.id)}
-                          className="transition-colors duration-200 flex items-center space-x-2 relative cursor-pointer"
-                          style={{ 
-                            backgroundColor: activeAnalysisId === cached.id || (!activeAnalysisId && index === 0) ? 'rgb(39, 39, 42)' : 'transparent',
-                            height: '32px',
-                            paddingLeft: '8px',
-                            paddingRight: '8px',
-                            borderRight: '1px solid rgb(46, 46, 46)'
-                          }}
-                          title={cached.instructions}
-                        >
-                          <div 
-                            className="w-4 h-4 rounded-full flex items-center justify-center"
-                            style={{ backgroundColor: '#2E2E2E' }}
-                          >
-                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                          </div>
-                          <h2 className="m-0" style={{ 
-                            fontSize: '11px', 
-                            color: activeAnalysisId === cached.id || (!activeAnalysisId && index === 0) ? 'rgb(242, 242, 242)' : 'rgb(166, 166, 166)',
-                            fontWeight: activeAnalysisId === cached.id || (!activeAnalysisId && index === 0) ? '600' : 'normal',
-                            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-                          }}>
-                            {cached.instructions.length > 15 
-                              ? cached.instructions.substring(0, 15) + '...' 
-                              : cached.instructions}
-                          </h2>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
+
+          {/* Receipts Section */}
+          <div className={`${expandedColumn === 'receipts' ? "w-full" : "w-1/2"} flex flex-col`} style={{ display: expandedColumn !== 'file-editor' ? 'flex' : 'none', height: '100%', minHeight: 0 }}>
+            <div className="mb-4" style={{ borderBottom: '1px solid #2E2E2E', marginBottom: '8px', minHeight: '32px', paddingLeft: '12px', paddingRight: '12px' }}>
+              <div className="flex justify-between items-center h-full">
+                <h2 style={{ 
+                  color: 'rgb(166, 166, 166)', 
+                  fontSize: '11px', 
+                  fontWeight: 'normal', 
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  margin: '0',
+                  paddingTop: '8px',
+                  paddingBottom: '8px'
+                }}>
+                  ALL RECEIPTS
+                </h2>
                 <button
-                  onClick={() => setExpandedColumn(expandedColumn === 'ai-insights' ? null : 'ai-insights')}
+                  onClick={() => setExpandedColumn(expandedColumn === 'receipts' ? null : 'receipts')}
                   className="save-button"
                   style={{
                     padding: '4px',
@@ -716,38 +689,18 @@ export function FileBrowser({ folderPath = 'data' }: FileBrowserProps) {
                   }}
                 >
                   <img 
-                    src={expandedColumn === 'ai-insights' ? '/icons/minimize-2.svg' : '/icons/maximize-2.svg'}
-                    alt={expandedColumn === 'ai-insights' ? 'Minimize' : 'Maximize'}
+                    src={expandedColumn === 'receipts' ? '/icons/minimize-2.svg' : '/icons/maximize-2.svg'}
+                    alt={expandedColumn === 'receipts' ? 'Minimize' : 'Maximize'}
                     width="16" 
                     height="16"
                     style={{ filter: 'brightness(0) saturate(100%) invert(65%) sepia(0%) saturate(0%) hue-rotate(93deg) brightness(96%) contrast(87%)' }}
                   />
                 </button>
               </div>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              <InsightsPanel 
-          selectedFile={selectedFile}
-                fileContent={fileContent}
-                onAnalysisStateChange={(isAnalyzing) => {
-                  console.log('FileBrowser: Analysis state changed to:', isAnalyzing);
-                  setIsAnalyzing(isAnalyzing);
-                }}
-                onCachedAnalysesChange={(analyses) => {
-                  console.log('FileBrowser: Cached analyses changed to:', analyses);
-                  setCachedAnalyses(analyses);
-                }}
-                onTabClick={(analysisId) => {
-                  console.log('FileBrowser: Tab clicked:', analysisId);
-                  setActiveAnalysisId(analysisId);
-                }}
-                onCacheCleared={() => {
-                  console.log('FileBrowser: Cache cleared, refreshing file list');
-                  loadFiles();
-                }}
-                activeAnalysisId={activeAnalysisId}
-        />
       </div>
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              <ReceiptPanel />
+          </div>
           </div>
         </div>
       </div>
