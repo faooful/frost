@@ -32,6 +32,11 @@ npm install
 
 - **📁 File Browser**: 3-column layout with file list, editor, and AI insights
 - **✏️ File Editor**: Create, edit, rename, and save files
+- **📄 PDF Support**: 
+  - Visual PDF preview with page navigation
+  - Automatic text extraction for AI analysis
+  - Invoice data extraction (amounts, dates, line items)
+  - Support for multi-page PDFs
 - **🤖 AI Analysis**: Intelligent content analysis with insights and suggestions
 - **🔒 Local Processing**: Everything runs on your machine (no external APIs)
 - **🎨 Modern UI**: Clean, responsive design with blue theme

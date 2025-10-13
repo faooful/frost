@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { FileInfo } from '@/lib/clientUtils';
 import { TextAnalysisPanel } from './TextAnalysisPanel';
+import { PDFViewer } from './PDFViewer';
 
 interface FileEditorProps {
   selectedFile: FileInfo | null;
@@ -60,6 +61,13 @@ export function FileEditor({ selectedFile, fileContent, onFileUpdated, onFileCre
     end: number;
     timestamp: number;
   } | null>(null);
+
+  // PDF extracted text state
+  const [pdfExtractedText, setPdfExtractedText] = useState<string>('');
+  const [pdfInvoiceData, setPdfInvoiceData] = useState<any>(null);
+
+  // Check if file is PDF
+  const isPDF = selectedFile?.extension === '.pdf';
 
   // Update content when selected file changes
   useEffect(() => {
@@ -455,24 +463,35 @@ export function FileEditor({ selectedFile, fileContent, onFileUpdated, onFileCre
 
       {/* Editor */}
       <div className="flex-1 flex flex-col">
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={handleContentChange}
-          onKeyDown={handleKeyDown}
-          onClick={handleTextareaClick}
-          onMouseUp={handleTextSelection}
-          placeholder="Start typing your content here... (Ctrl+S to save)"
-          className="w-full px-3 py-2 bg-transparent text-white focus:outline-none resize-none font-medium border-0 overflow-y-auto"
-          style={{ 
-            height: '100%',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            fontSize: '14px',
-            lineHeight: '1.6',
-            color: 'rgb(242, 242, 242) !important',
-            fontWeight: '100'
-          }}
-        />
+        {isPDF ? (
+          <PDFViewer 
+            filePath={selectedFile.path} 
+            onTextExtracted={(text, invoiceData) => {
+              setPdfExtractedText(text);
+              setPdfInvoiceData(invoiceData);
+              setContent(text); // Set content to extracted text for AI analysis
+            }}
+          />
+        ) : (
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleContentChange}
+            onKeyDown={handleKeyDown}
+            onClick={handleTextareaClick}
+            onMouseUp={handleTextSelection}
+            placeholder="Start typing your content here... (Ctrl+S to save)"
+            className="w-full px-3 py-2 bg-transparent text-white focus:outline-none resize-none font-medium border-0 overflow-y-auto"
+            style={{ 
+              height: '100%',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              fontSize: '14px',
+              lineHeight: '1.6',
+              color: 'rgb(242, 242, 242) !important',
+              fontWeight: '100'
+            }}
+          />
+        )}
       </div>
 
       {/* Context Menu - Fixed positioning outside container */}
