@@ -46,20 +46,49 @@ export async function POST(request: NextRequest) {
             // Extract text from all pages
             const pages = pdfData.Pages || [];
             const textParts: string[] = [];
+            let pageNum = 0;
             
             pages.forEach((page: any) => {
+              pageNum++;
               const texts = page.Texts || [];
+              
+              // Try multiple extraction methods
               texts.forEach((text: any) => {
-                const decoded = decodeURIComponent(text.R?.[0]?.T || '');
-                if (decoded.trim()) {
-                  textParts.push(decoded);
+                try {
+                  // Method 1: Standard decoding
+                  if (text.R && text.R[0] && text.R[0].T) {
+                    const decoded = decodeURIComponent(text.R[0].T);
+                    if (decoded.trim()) {
+                      textParts.push(decoded);
+                    }
+                  }
+                  
+                  // Method 2: Try all R elements if multiple
+                  if (text.R && text.R.length > 1) {
+                    text.R.forEach((r: any) => {
+                      if (r.T) {
+                        const decoded = decodeURIComponent(r.T);
+                        if (decoded.trim()) {
+                          textParts.push(decoded);
+                        }
+                      }
+                    });
+                  }
+                } catch (decodeErr) {
+                  console.warn('Error decoding text:', decodeErr);
+                  // Try raw text if decoding fails
+                  if (text.R && text.R[0] && text.R[0].T) {
+                    textParts.push(text.R[0].T);
+                  }
                 }
               });
             });
             
             const extractedText = textParts.join(' ');
+            console.log(`Extracted ${textParts.length} text segments from ${pageNum} pages`);
             resolve(extractedText);
           } catch (err) {
+            console.error('Error processing PDF data:', err);
             reject(err);
           }
         });
@@ -68,14 +97,19 @@ export async function POST(request: NextRequest) {
       });
 
       fullText = await parsePDF;
-      pageCount = 1; // pdf2json doesn't easily provide page count
+      pageCount = 1;
       
-      console.log('PDF text extracted successfully:', fullText.substring(0, 200) + '...');
+      // If extraction resulted in very little text, log a warning
+      if (fullText.length < 50) {
+        console.warn(`Warning: Only extracted ${fullText.length} characters. PDF might have images or special encoding.`);
+      } else {
+        console.log('PDF text extracted successfully:', fullText.substring(0, 200) + '...');
+      }
     } catch (pdfError) {
       console.error('PDF parsing error:', pdfError);
       // Return basic info if parsing fails
       const fileName = path.basename(filePath);
-      fullText = `PDF File: ${fileName}\n\nSize: ${(stats.size / 1024).toFixed(2)} KB\n\nNote: PDF text extraction is currently unavailable. You can view the PDF visually and manually add notes for AI analysis.`;
+      fullText = `PDF File: ${fileName}\n\nSize: ${(stats.size / 1024).toFixed(2)} KB\n\nNote: This PDF could not be parsed. It may contain images, scanned content, or use an unsupported format. You can:\n- View the PDF visually in the preview above\n- Manually type key information for AI analysis\n- Try converting the PDF to text externally`;
       pageCount = 0;
     }
     
