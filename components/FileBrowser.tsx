@@ -153,17 +153,6 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
       {showFileList && (
         <div className="w-1/4 flex flex-col" style={{ padding: '8px 16px 16px', backgroundColor: '#171717', maxWidth: '256px' }}>
           <div style={{ marginBottom: '8px', marginLeft: '4px' }}>
-            <h1 style={{ 
-              fontFamily: '"Jacquard 12", serif', 
-              fontSize: '40px', 
-              fontWeight: '400', 
-              fontStyle: 'normal',
-              color: '#f2f2f2',
-              marginBottom: '8px',
-              textAlign: 'left'
-            }}>
-              Frost
-            </h1>
             <h2 style={{ 
               color: 'rgb(166, 166, 166)', 
               fontSize: '13px', 
@@ -176,23 +165,22 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
             </h2>
           </div>
           
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" style={{ width: '100%' }}>
           {files.length === 0 ? (
               <div className="text-gray-500 text-center py-8">No files found</div>
           ) : (
-              <div className="space-y-1">
+              <div className="space-y-1" style={{ width: '100%' }}>
               {files.map((file) => (
                 <div
                   key={file.path}
                   onClick={() => handleFileSelect(file)}
-                      className="flex items-center justify-between p-2 rounded cursor-pointer group"
+                      className="flex items-center justify-between rounded cursor-pointer group"
                     style={{
                       backgroundColor: selectedFile?.path === file.path ? '#27272A' : 'transparent',
-                      paddingTop: '4px',
-                      paddingBottom: '4px',
-                      paddingLeft: '4px',
-                      paddingRight: '4px',
-                      borderRadius: '4px'
+                      padding: '8px',
+                      borderRadius: '4px',
+                      width: '100%',
+                      minWidth: 0
                     }}
                     onMouseEnter={(e) => {
                       if (selectedFile?.path !== file.path) {
@@ -205,17 +193,16 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                       }
                     }}
                   >
-                    <div className="flex items-center space-x-2 flex-1 min-w-0" style={{ maxWidth: '100%' }}>
-                      <span className="text-lg">{getFileIcon(file.extension)}</span>
-                      <div className="flex flex-col min-w-0 flex-1" style={{ maxWidth: 'calc(100% - 30px)' }}>
+                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                      <span className="text-lg" style={{ flexShrink: 0 }}>{getFileIcon(file.extension)}</span>
+                      <div className="flex flex-col min-w-0 flex-1" style={{ overflow: 'hidden' }}>
                         <span 
-                          className="text-sm font-medium truncate"
+                          className="text-sm font-medium"
                           style={{
                             fontSize: '14px',
                             fontWeight: '500',
                             color: selectedFile?.path === file.path ? '#f2f2f2' : '#f2f2f2',
                             display: 'block',
-                            maxWidth: '100%',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
@@ -256,7 +243,8 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                         color: '#ef4444',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        flexShrink: 0
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = '#ef4444';
