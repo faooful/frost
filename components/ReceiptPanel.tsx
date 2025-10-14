@@ -147,11 +147,14 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
             vat += receipt.invoiceData.tax;
           }
           
-          // Sum up totals (use totalAmount or balanceDue)
+          // Sum up totals (use totalAmount, balanceDue, or calculate from subtotal + tax)
           if (receipt.invoiceData?.totalAmount) {
             total += receipt.invoiceData.totalAmount;
           } else if (receipt.invoiceData?.balanceDue) {
             total += receipt.invoiceData.balanceDue;
+          } else if (receipt.invoiceData?.subtotal !== null && receipt.invoiceData?.tax !== null) {
+            // Calculate total if not provided
+            total += receipt.invoiceData.subtotal + receipt.invoiceData.tax;
           }
         });
         
@@ -232,13 +235,13 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
   }
 
   return (
-    <div className="h-full flex flex-col p-6 overflow-y-auto receipt-mono">
+    <div className="h-full flex flex-col overflow-y-auto receipt-mono">
       {/* Re-analysis Banner */}
       {needsReanalysis && (
         <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <p className="font-semibold text-yellow-400 mb-1">📄 New PDFs detected</p>
+              <p className="font-semibold text-yellow-400 mb-1">New PDFs detected</p>
               <p className="text-yellow-200/80">
                 New invoice files have been added to the data folder. Re-analyze to include them in the receipt.
               </p>
@@ -253,75 +256,106 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
         </div>
       )}
 
-      {/* All Line Items */}
-      <div className="flex-1 mb-6">
-        {consolidatedLineItems.length > 0 ? (
-          <div className="space-y-1">
-            {consolidatedLineItems.map((item, index) => (
-              <div key={index} className="flex justify-between items-start py-1">
-                <div className="flex-1">
-                  <p className="text-gray-200">{item.description}</p>
-                  {item.source && (
-                    <p className="text-gray-500 mt-0.5">
-                      {item.sourceFile && onFileSelect ? (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onFileSelect(item.sourceFile!);
-                          }}
-                          style={{ 
-                            all: 'unset', 
-                            color: '#6b7280',
-                            textDecoration: 'underline', 
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                            fontSize: 'inherit'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#9ca3af'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = '#6b7280'}
-                        >
-                          {item.source}
-                        </button>
-                      ) : (
-                        item.source
-                      )}
-                    </p>
-                  )}
-                </div>
-                <p className="text-white ml-4">£{item.amount.toFixed(2)}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 italic">No line items could be extracted from the invoices</p>
-        )}
-      </div>
-
-      {/* Totals Section */}
-      <div className="mt-auto pt-4">
-        <div className="space-y-1">
-          {/* Subtotal - calculated from line items */}
-          {consolidatedLineItems.length > 0 && (
-            <div className="flex justify-between">
-              <span className="text-gray-400">Subtotal ({consolidatedLineItems.length} items):</span>
-              <span className="text-white">
-                £{consolidatedLineItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
+      {/* Individual Receipts */}
+      <div className="flex-1">
+        {receipts.map((receipt, receiptIndex) => (
+          <>
+          <div key={receiptIndex} style={{ paddingBottom: '16px' }}>
+            {/* Receipt Header */}
+            <div className="mb-3">
+              <span
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (onFileSelect) {
+                    onFileSelect(receipt.filename);
+                  }
+                }}
+                style={{ 
+                  color: '#9ca3af',
+                  textDecoration: 'underline', 
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  fontSize: 'inherit',
+                  fontWeight: '600'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#d1d5db'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+              >
+                {receipt.invoiceData.invoiceNumber || receipt.filename}
               </span>
             </div>
+
+            {/* Line Items */}
+            {receipt.invoiceData.lineItems && receipt.invoiceData.lineItems.length > 0 ? (
+              <div className="space-y-0.5">
+                {receipt.invoiceData.lineItems.map((item, index) => (
+                  <div key={index} className="flex justify-between items-start py-0.5">
+                    <p className="text-gray-200 flex-1 pr-8">{item.description}</p>
+                    <p className="text-white">£{item.amount.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic text-sm">No line items extracted</p>
+            )}
+
+            {/* Receipt Totals */}
+            <div className="mt-3 pt-2 space-y-1 text-sm">
+              {receipt.invoiceData.tax !== null && receipt.invoiceData.tax > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-400">VAT:</span>
+                  <span className="text-white">£{receipt.invoiceData.tax.toFixed(2)}</span>
+                </div>
+              )}
+              {receipt.invoiceData.subtotal !== null && (
+                <div className="flex justify-between" style={{ fontWeight: 700 }}>
+                  <span className="text-gray-400">Subtotal:</span>
+                  <span className="text-white">£{receipt.invoiceData.subtotal.toFixed(2)}</span>
+                </div>
+              )}
+              {(() => {
+                const total = receipt.invoiceData.totalAmount !== null 
+                  ? receipt.invoiceData.totalAmount 
+                  : (receipt.invoiceData.subtotal !== null && receipt.invoiceData.tax !== null)
+                    ? receipt.invoiceData.subtotal + receipt.invoiceData.tax
+                    : null;
+                
+                return total !== null ? (
+                  <div className="flex justify-between" style={{ fontWeight: 700 }}>
+                    <span className="text-gray-300">Total:</span>
+                    <span className="text-white">£{total.toFixed(2)}</span>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          </div>
+          {receiptIndex < receipts.length - 1 && (
+            <div style={{ 
+              borderTop: '1px dashed #6B7280', 
+              marginBottom: '16px',
+              opacity: 0.5
+            }}></div>
           )}
-          
-          {/* VAT */}
+          </>
+        ))}
+      </div>
+
+      {/* Grand Total Section */}
+      <div className="mt-8">
+        <div style={{ borderTop: '1px dashed #6B7280', opacity: 0.5, marginBottom: '24px' }}></div>
+        <div className="space-y-2">
+          {/* Total VAT */}
           {totalVAT > 0 && (
-            <div className="flex justify-between">
-              <span className="text-gray-400">Total VAT:</span>
+            <div className="flex justify-between text-base" style={{ fontWeight: 700 }}>
+              <span className="text-gray-300">Total VAT:</span>
               <span className="text-white">£{totalVAT.toFixed(2)}</span>
             </div>
           )}
           
           {/* Grand Total */}
-          <div className="flex justify-between pt-2">
-            <span className="text-gray-200">TOTAL:</span>
+          <div className="flex justify-between pt-2 text-lg" style={{ fontWeight: 700 }}>
+            <span className="text-gray-100">GRAND TOTAL:</span>
             <span className="text-green-400">
               £{grandTotal.toFixed(2)}
             </span>

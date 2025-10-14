@@ -205,18 +205,23 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                       }
                     }}
                   >
-                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 flex-1 min-w-0" style={{ maxWidth: '100%' }}>
                       <span className="text-lg">{getFileIcon(file.extension)}</span>
-                      <div className="flex flex-col min-w-0 flex-1">
+                      <div className="flex flex-col min-w-0 flex-1" style={{ maxWidth: 'calc(100% - 30px)' }}>
                         <span 
                           className="text-sm font-medium truncate"
-                  style={{
+                          style={{
                             fontSize: '14px',
                             fontWeight: '500',
-                            color: selectedFile?.path === file.path ? '#f2f2f2' : '#f2f2f2'
-                  }}
-                >
-                 {file.name}
+                            color: selectedFile?.path === file.path ? '#f2f2f2' : '#f2f2f2',
+                            display: 'block',
+                            maxWidth: '100%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {file.name}
                         </span>
                         <span 
                           className="text-xs text-gray-400"
