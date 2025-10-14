@@ -2,6 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogPortal,
+  DialogOverlay,
+} from "@/components/ui/dialog";
 
 const PixelBlast = dynamic(() => import('./PixelBlast'), { 
   ssr: false,
@@ -49,6 +59,7 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
   const [needsReanalysis, setNeedsReanalysis] = useState(false);
   const [cachedFileList, setCachedFileList] = useState<string[]>([]);
   const [asciiFrame, setAsciiFrame] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     checkCacheAndFetch();
@@ -258,21 +269,129 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
 
   return (
     <div className="h-full flex flex-col overflow-y-auto receipt-mono">
-      {/* Title */}
+      {/* Title with Button */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 className="receipt-title" style={{ 
-          color: '#f2f2f2',
-          marginBottom: '8px',
-          marginTop: 0
-        }}>
-          Receipts summary
-        </h1>
-        <p className="receipt-subtitle" style={{
-          color: '#9ca3af',
-          margin: 0
-        }}>
-          As of {getLatestMonthYear()}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div>
+            <h1 className="receipt-title" style={{ 
+              color: '#f2f2f2',
+              marginBottom: '8px',
+              marginTop: 0
+            }}>
+              Receipts summary
+            </h1>
+            <p className="receipt-subtitle" style={{
+              color: '#9ca3af',
+              margin: 0
+            }}>
+              As of {getLatestMonthYear()}
+            </p>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            style={{
+              all: 'unset',
+              cursor: 'pointer',
+              fontSize: '14px',
+              color: '#9ca3af',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = '#d1d5db'}
+            onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+          >
+            •••
+          </button>
+
+          {/* Custom Modal with Overlay */}
+          {isModalOpen && (
+            <>
+              {/* Overlay */}
+              <div
+                onClick={() => setIsModalOpen(false)}
+                style={{
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                  backdropFilter: 'blur(4px)',
+                  zIndex: 9998,
+                  animation: 'fadeIn 0.2s ease-out'
+                }}
+              />
+              
+              {/* Modal Content */}
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'fixed',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: '#171717',
+                  border: '1px solid #2E2E2E',
+                  borderRadius: '8px',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  maxWidth: '440px',
+                  width: '100%',
+                  zIndex: 9999,
+                  animation: 'slideIn 0.2s ease-out'
+                }}
+              >
+                {/* Close Button */}
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '20px',
+                    lineHeight: 1
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#f2f2f2'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+                >
+                  ×
+                </button>
+
+                <div style={{ borderBottom: '1px solid #2E2E2E', padding: '16px' }}>
+                  <h3 style={{ 
+                    margin: 0, 
+                    color: '#f2f2f2', 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                  }}>
+                    Receipt Options
+                  </h3>
+                </div>
+                <div style={{ padding: '16px' }}>
+                  <p style={{ 
+                    fontSize: '13px', 
+                    color: '#9ca3af',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                    margin: 0
+                  }}>
+                    Modal content goes here...
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Re-analysis Banner */}
