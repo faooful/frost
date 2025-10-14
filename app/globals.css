@@ -180,3 +180,19 @@ button:hover {
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
   font-size: 11px !important;
 }
+
+/* Exception for receipt title - use Lora font */
+.receipt-title {
+  font-family: "Lora", serif !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  font-optical-sizing: auto !important;
+  font-style: normal !important;
+}
+
+/* Exception for receipt subtitle - use system font */
+.receipt-subtitle {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}

@@ -138,6 +138,27 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
     return iconMap[extension] || '';
   };
 
+  // Group files by year
+  const groupFilesByYear = () => {
+    const grouped: { [year: string]: FileInfo[] } = {};
+    
+    files.forEach(file => {
+      const year = new Date(file.lastModified).getFullYear().toString();
+      if (!grouped[year]) {
+        grouped[year] = [];
+      }
+      grouped[year].push(file);
+    });
+    
+    // Sort years in descending order (newest first)
+    const sortedYears = Object.keys(grouped).sort((a, b) => parseInt(b) - parseInt(a));
+    
+    return sortedYears.map(year => ({
+      year,
+      files: grouped[year]
+    }));
+  };
+
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center">
@@ -152,25 +173,25 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
       {/* File List */}
       {showFileList && (
         <div className="w-1/4 flex flex-col" style={{ padding: '8px 16px 16px', backgroundColor: '#171717', maxWidth: '256px' }}>
-          <div style={{ marginBottom: '8px', marginLeft: '4px' }}>
-            <h2 style={{ 
-              color: 'rgb(166, 166, 166)', 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-              marginLeft: '4px',
-              marginBottom: '0px'
-            }}>
-              Files ({files.length})
-            </h2>
-          </div>
-          
           <div className="flex-1 overflow-y-auto" style={{ width: '100%' }}>
           {files.length === 0 ? (
               <div className="text-gray-500 text-center py-8">No files found</div>
           ) : (
-              <div className="space-y-1" style={{ width: '100%' }}>
-              {files.map((file) => (
+              <div style={{ width: '100%' }}>
+              {groupFilesByYear().map((group) => (
+                <div key={group.year} style={{ marginBottom: '16px' }}>
+                  <h2 style={{ 
+                    color: 'rgb(166, 166, 166)', 
+                    fontSize: '13px', 
+                    fontWeight: '600', 
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                    marginLeft: '4px',
+                    marginBottom: '8px'
+                  }}>
+                    {group.year} ({group.files.length})
+                  </h2>
+                  <div className="space-y-1" style={{ width: '100%' }}>
+              {group.files.map((file) => (
                 <div
                   key={file.path}
                   onClick={() => handleFileSelect(file)}
@@ -198,7 +219,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                       <div className="flex flex-col min-w-0 flex-1" style={{ overflow: 'hidden' }}>
                         <span 
                           className="text-sm font-medium"
-                          style={{
+                  style={{
                             fontSize: '14px',
                             fontWeight: '500',
                             color: selectedFile?.path === file.path ? '#f2f2f2' : '#f2f2f2',
@@ -208,7 +229,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                             whiteSpace: 'nowrap'
                           }}
                         >
-                          {file.name}
+                 {file.name}
                         </span>
                         <span 
                           className="text-xs text-gray-400"
@@ -262,6 +283,9 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                         <line x1="14" y1="11" x2="14" y2="17"/>
                       </svg>
                     </button>
+                    </div>
+              ))}
+                  </div>
                 </div>
               ))}
             </div>

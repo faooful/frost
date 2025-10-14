@@ -234,8 +234,47 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
     );
   }
 
+  // Get the latest date from all receipts
+  const getLatestMonthYear = () => {
+    let latestDate: Date | null = null;
+    
+    receipts.forEach(receipt => {
+      if (receipt.invoiceData?.date) {
+        const date = new Date(receipt.invoiceData.date);
+        if (!isNaN(date.getTime())) {
+          if (!latestDate || date > latestDate) {
+            latestDate = date;
+          }
+        }
+      }
+    });
+    
+    if (latestDate) {
+      return latestDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+    
+    return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
   return (
     <div className="h-full flex flex-col overflow-y-auto receipt-mono">
+      {/* Title */}
+      <div style={{ marginBottom: '24px' }}>
+        <h1 className="receipt-title" style={{ 
+          color: '#f2f2f2',
+          marginBottom: '8px',
+          marginTop: 0
+        }}>
+          Receipts summary
+        </h1>
+        <p className="receipt-subtitle" style={{
+          color: '#9ca3af',
+          margin: 0
+        }}>
+          As of {getLatestMonthYear()}
+        </p>
+      </div>
+
       {/* Re-analysis Banner */}
       {needsReanalysis && (
         <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
@@ -347,14 +386,14 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
         <div className="space-y-2">
           {/* Total VAT */}
           {totalVAT > 0 && (
-            <div className="flex justify-between text-base" style={{ fontWeight: 700 }}>
+            <div className="flex justify-between" style={{ fontWeight: 700, fontSize: '14px' }}>
               <span className="text-gray-300">Total VAT:</span>
               <span className="text-white">£{totalVAT.toFixed(2)}</span>
             </div>
           )}
           
           {/* Grand Total */}
-          <div className="flex justify-between pt-2 text-lg" style={{ fontWeight: 700 }}>
+          <div className="flex justify-between pt-2" style={{ fontWeight: 700, fontSize: '16px' }}>
             <span className="text-gray-100">GRAND TOTAL:</span>
             <span className="text-green-400">
               £{grandTotal.toFixed(2)}
