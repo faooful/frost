@@ -55,12 +55,15 @@ export async function POST(request: NextRequest) {
     // Get file stats
     const stats = fs.statSync(filePath);
     
+    // Return relative path (same format as getFilesFromFolder)
+    const relativePath = path.join(folderPath, file.name);
+    
     const fileInfo = {
       name: file.name,
-      path: filePath,
-      lastModified: stats.mtime.getTime(),
+      path: relativePath, // Use relative path to match fileUtils format
+      lastModified: stats.mtime.toISOString(), // Convert to ISO string like fileUtils
       size: stats.size,
-      extension: path.extname(file.name)
+      extension: path.extname(file.name).toLowerCase() // Make lowercase to match fileUtils
     };
 
     console.log('File uploaded successfully:', fileInfo);

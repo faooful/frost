@@ -325,6 +325,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                   
                   try {
                     setIsCreatingNewFile(true);
+                    let lastUploadedFile = null;
                     
                     for (const file of Array.from(files)) {
                       // Create FormData to upload the file
@@ -345,6 +346,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                       
                       if (data.success) {
                         console.log('File uploaded successfully:', data.file);
+                        lastUploadedFile = data.file; // Track the last uploaded file
                       } else {
                         console.error('Failed to upload file:', data.error);
                         alert(`Failed to upload ${file.name}: ${data.error}`);
@@ -353,7 +355,22 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                     
                     // Refresh the file list to show the new files
                     console.log('Refreshing file list...');
-                    await fetchFiles();
+                    const response = await fetch('/api/files');
+                    const filesData = await response.json();
+                    
+                    if (filesData.files) {
+                      setFiles(filesData.files);
+                      
+                      // Auto-select the last uploaded file after files list is refreshed
+                      if (lastUploadedFile) {
+                        console.log('Auto-selecting uploaded file:', lastUploadedFile.name);
+                        // Find the uploaded file in the fresh files list
+                        const uploadedFile = filesData.files.find((f: FileInfo) => f.name === lastUploadedFile.name);
+                        if (uploadedFile) {
+                          handleFileSelect(uploadedFile);
+                        }
+                      }
+                    }
                     
                   } catch (error) {
                     console.error('Error uploading files:', error);
