@@ -505,14 +505,14 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
         <div className="space-y-2">
           {/* Total VAT */}
           {totalVAT > 0 && (
-            <div className="flex justify-between" style={{ fontWeight: 700, fontSize: '14px' }}>
+            <div className="flex justify-between receipt-total-vat">
               <span className="text-gray-300">Total VAT:</span>
               <span className="text-white">£{totalVAT.toFixed(2)}</span>
             </div>
           )}
           
           {/* Grand Total */}
-          <div className="flex justify-between pt-2" style={{ fontWeight: 700, fontSize: '16px' }}>
+          <div className="flex justify-between pt-2 receipt-grand-total">
             <span className="text-gray-100">GRAND TOTAL:</span>
             <span className="text-green-400">
               £{grandTotal.toFixed(2)}

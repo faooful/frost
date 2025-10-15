@@ -301,64 +301,74 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
           {/* New File Button - Aligned to bottom */}
           <div style={{ paddingTop: '12px', borderTop: '1px solid rgb(46, 46, 46)', padding: '12px 8px' }}>
             <button
-              onClick={async () => {
-                try {
-                  setIsCreatingNewFile(true);
+              onClick={() => {
+                // Create a hidden file input element
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.multiple = true;
+                
+                input.onchange = async (e) => {
+                  const files = (e.target as HTMLInputElement).files;
+                  if (!files || files.length === 0) return;
                   
-                  // Create a new file
-                  const newFileName = `New file.txt`;
-                  const newFilePath = `${folderPath}/${newFileName}`;
+                  console.log('Files selected:', Array.from(files).map(f => f.name));
+                  console.log('Folder path:', folderPath);
                   
-                  console.log('Creating new file:', { newFileName, newFilePath });
-                  
-                  // Create the file via API
-                  const response = await fetch('/api/files/create', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      filename: newFileName,
-                      filePath: newFilePath,
-                      content: ''
-                    }),
-                  });
-                  
-                  const data = await response.json();
-                  console.log('Create file response:', data);
-                  
-                  if (data.success) {
-                    // Update state
-                    setFiles(prevFiles => [...prevFiles, data.file]);
-                    setSelectedFile(data.file);
-                    setFileContent('');
-                    setEditingFilename('');
-                    console.log('New file created and selected:', data.file);
-                  } else {
-                    console.error('Failed to create file:', data.error);
-                    alert(`Failed to create file: ${data.error}`);
+                  try {
+                    setIsCreatingNewFile(true);
+                    
+                    for (const file of Array.from(files)) {
+                      // Create FormData to upload the file
+                      const formData = new FormData();
+                      formData.append('file', file);
+                      formData.append('folderPath', folderPath);
+                      
+                      console.log('Uploading file:', file.name, 'to folder:', folderPath);
+                      
+                      // Upload the file via API
+                      const response = await fetch('/api/files/upload', {
+                        method: 'POST',
+                        body: formData,
+                      });
+                      
+                      const data = await response.json();
+                      console.log('Upload response:', data);
+                      
+                      if (data.success) {
+                        console.log('File uploaded successfully:', data.file);
+                      } else {
+                        console.error('Failed to upload file:', data.error);
+                        alert(`Failed to upload ${file.name}: ${data.error}`);
+                      }
+                    }
+                    
+                    // Refresh the file list to show the new files
+                    console.log('Refreshing file list...');
+                    await fetchFiles();
+                    
+                  } catch (error) {
+                    console.error('Error uploading files:', error);
+                    alert(`Error uploading files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                  } finally {
+                    setIsCreatingNewFile(false);
                   }
-                } catch (error) {
-                  console.error('Error creating file:', error);
-                  alert(`Error creating file: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                } finally {
-                  setIsCreatingNewFile(false);
-                }
+                };
+                
+                // Trigger the file picker
+                input.click();
               }}
               style={{
                 width: '100%',
-                padding: '8px 12px',
+                padding: '8px',
                 backgroundColor: '#2E2E2E',
                 border: '1px solid #2E2E2E',
                 borderRadius: '4px',
                 color: '#f2f2f2',
-                fontSize: '12px',
-                fontWeight: '500',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6px',
                 transition: 'all 0.2s'
               }}
               onMouseEnter={(e) => {
@@ -370,11 +380,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                 e.currentTarget.style.color = '#f2f2f2';
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/>
-                <line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              New File
+              <img src="/icons/upload.svg" alt="Upload" width="16" height="16" style={{ filter: 'brightness(0) invert(1)' }} />
             </button>
           </div>
         </div>
@@ -415,7 +421,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                     className="text-lg font-medium bg-transparent border-none outline-none"
                     style={{
                       fontSize: '16px',
-                      fontWeight: '500',
+                      fontWeight: '600',
                       color: '#f2f2f2',
                       background: 'transparent',
                       border: 'none',
@@ -423,7 +429,8 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                       flex: 1,
                       minWidth: 0,
                       overflow: 'visible',
-                      whiteSpace: 'nowrap'
+                      whiteSpace: 'nowrap',
+                      fontFamily: '"Lora", serif'
                     }}
                   >
                     {selectedFile.name}

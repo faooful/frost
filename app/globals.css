@@ -190,9 +190,35 @@ button:hover {
   font-style: normal !important;
 }
 
-/* Exception for receipt subtitle - use system font */
+/* Exception for receipt subtitle - use monospace font */
 .receipt-subtitle {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
   font-size: 14px !important;
   font-weight: 400 !important;
+}
+
+/* Exception for grand total - larger font */
+.receipt-mono .receipt-grand-total {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.receipt-mono .receipt-grand-total * {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+/* Exception for total VAT - larger font */
+.receipt-mono .receipt-total-vat {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+.receipt-mono .receipt-total-vat * {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', 'Droid Sans Mono', 'Source Code Pro', monospace !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
 }
