@@ -17,7 +17,15 @@ export async function getFilesFromFolder(folderPath: string): Promise<FileInfo[]
     
     const fileInfos: FileInfo[] = [];
     
+    // Files to exclude from the file list
+    const excludedFiles = ['.gitkeep', '.DS_Store'];
+    
     for (const file of files) {
+      // Skip excluded files
+      if (excludedFiles.includes(file)) {
+        continue;
+      }
+      
       const filePath = path.join(fullPath, file);
       const stats = fs.statSync(filePath);
       

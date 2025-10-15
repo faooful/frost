@@ -37,5 +37,22 @@ next-env.d.ts
 # analysis cache
 .analysis-cache/
 
-# data folder
-data/
+# data folder - ignore PDF files and other content but keep folder structure
+data/*.pdf
+data/*.PDF
+data/*.txt
+data/*.doc
+data/*.docx
+data/*.xls
+data/*.xlsx
+data/*.csv
+data/*.json
+data/*.xml
+# Keep the folder structure with .gitkeep
+!data/.gitkeep
+
+# any other personal data folders
+personal-data/
+documents/
+invoices/
+receipts/

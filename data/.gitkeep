@@ -1,0 +1,5 @@
+# This file ensures the data folder is tracked by git
+# while keeping the actual PDF files private
+# 
+# Add your PDF invoices here - they will be ignored by git
+# but the folder structure will be preserved for other users
