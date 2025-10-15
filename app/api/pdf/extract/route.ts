@@ -174,24 +174,38 @@ function extractInvoiceData(text: string) {
     console.log('No subtotal match found');
   }
 
-  // Extract VAT/TAX - try multiple patterns
-  let taxMatch = text.match(/vat[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})/i);
+  // Extract VAT/TAX - be more specific to avoid confusion with total
+  let taxMatch = text.match(/(?:^|\n|\r)\s*vat[\s@%]*[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})(?:\s|$|\n|\r)/im);
   if (!taxMatch) {
-    taxMatch = text.match(/tax[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})/i);
+    taxMatch = text.match(/(?:^|\n|\r)\s*tax[\s@%]*[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})(?:\s|$|\n|\r)/im);
   }
-  if (taxMatch) {
+  if (!taxMatch) {
+    taxMatch = text.match(/vat\s+at\s+\d+%/i);
+    if (taxMatch) {
+      // Look for VAT amount near VAT rate
+      const vatContext = text.substring(Math.max(0, taxMatch.index - 50), Math.min(text.length, (taxMatch.index || 0) + 50));
+      const vatAmountMatch = vatContext.match(/(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})\s*(?:vat|tax|total)/i);
+      if (vatAmountMatch) {
+        taxMatch = [null, vatAmountMatch[1]];
+      }
+    }
+  }
+  if (taxMatch && taxMatch[1]) {
     data.tax = parseFloat(taxMatch[1].replace(/,/g, ''));
     console.log('Found tax/vat:', data.tax);
   } else {
     console.log('No tax/vat match found');
   }
 
-  // Extract TOTAL - try multiple patterns
-  let totalMatch = text.match(/(?:^|\s)total[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})/im);
+  // Extract TOTAL - be more specific, make sure it's not VAT
+  let totalMatch = text.match(/(?:^|\n|\r)\s*(?:total\s+amount|total\s+due|total\s+payable|grand\s+total)[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})(?:\s|$|\n|\r)/im);
+  if (!totalMatch) {
+    totalMatch = text.match(/(?:^|\n|\r)\s*total[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})(?:\s|$|\n|\r)(?!.*(?:vat|tax))/im);
+  }
   if (!totalMatch) {
     totalMatch = text.match(/amount\s+due[\s:]*(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})/i);
   }
-  if (totalMatch) {
+  if (totalMatch && totalMatch[1]) {
     data.totalAmount = parseFloat(totalMatch[1].replace(/,/g, ''));
     console.log('Found total:', data.totalAmount);
   } else {
@@ -239,6 +253,27 @@ function extractInvoiceData(text: string) {
   if (lineItems.length > 0) {
     data.lineItems = lineItems;
   }
+
+  // Validation: Ensure VAT is not the same as total (common extraction error)
+  if (data.tax !== null && data.totalAmount !== null && data.tax === data.totalAmount) {
+    console.log('Warning: VAT and Total are the same value, likely an extraction error');
+    // If VAT equals total, it's probably the total that was misidentified
+    // Reset VAT and keep total
+    data.tax = null;
+  }
+  
+  // Additional validation: VAT should typically be smaller than total
+  if (data.tax !== null && data.totalAmount !== null && data.tax >= data.totalAmount) {
+    console.log('Warning: VAT is greater than or equal to total, likely an extraction error');
+    data.tax = null;
+  }
+
+  console.log('Final extracted data:', {
+    invoiceNumber: data.invoiceNumber,
+    totalAmount: data.totalAmount,
+    tax: data.tax,
+    subtotal: data.subtotal
+  });
 
   return data;
 }

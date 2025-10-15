@@ -402,10 +402,13 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
                   borderRadius: '8px',
                   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                  maxWidth: '440px',
-                  width: '100%',
+                  maxWidth: '800px',
+                  width: '90%',
+                  maxHeight: '80vh',
                   zIndex: 9999,
-                  animation: 'slideIn 0.2s ease-out'
+                  animation: 'slideIn 0.2s ease-out',
+                  display: 'flex',
+                  flexDirection: 'column'
                 }}
               >
                 {/* Close Button */}
@@ -440,18 +443,122 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
                     fontWeight: '600',
                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
                   }}>
-                    Receipt Options
+                    Summary Data
                   </h3>
                 </div>
-                <div style={{ padding: '16px' }}>
-                  <p style={{ 
-                    fontSize: '13px', 
+                <div style={{ padding: '16px', flex: 1, overflowY: 'auto' }}>
+                  <div style={{ 
+                    fontSize: '12px',
                     color: '#9ca3af',
-                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                    margin: 0
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
                   }}>
-                    Modal content goes here...
-                  </p>
+                    {/* Unified Receipts Table */}
+                    {receipts.length > 0 && (
+                      <div>
+                        <div style={{ 
+                          border: '1px solid #2E2E2E', 
+                          borderRadius: '4px', 
+                          overflow: 'hidden',
+                          fontSize: '11px'
+                        }}>
+                          {/* Table Header */}
+                          <div style={{ 
+                            display: 'grid', 
+                            gridTemplateColumns: '2fr 2fr 80px 80px 80px', 
+                            backgroundColor: '#1f1f1f',
+                            borderBottom: '1px solid #2E2E2E',
+                            padding: '8px 12px',
+                            fontWeight: '600',
+                            color: '#d1d5db'
+                          }}>
+                            <div>Invoice / File</div>
+                            <div>Categories</div>
+                            <div>Items</div>
+                            <div style={{ textAlign: 'right' }}>VAT</div>
+                            <div style={{ textAlign: 'right' }}>Total</div>
+                          </div>
+                          
+                          {/* Table Rows */}
+                          {receipts.map((receipt, index) => {
+                            const total = receipt.invoiceData.totalAmount !== null 
+                              ? receipt.invoiceData.totalAmount 
+                              : (receipt.invoiceData.subtotal !== null && receipt.invoiceData.tax !== null)
+                                ? receipt.invoiceData.subtotal + receipt.invoiceData.tax
+                                : receipt.invoiceData.subtotal !== null 
+                                  ? receipt.invoiceData.subtotal
+                                  : null;
+                            
+                            const tax = receipt.invoiceData.tax !== null ? receipt.invoiceData.tax : null;
+                            const itemCount = receipt.invoiceData?.lineItems?.length || 0;
+                            
+                            // Get unique categories for this receipt as tags
+                            const categories = receipt.invoiceData?.lineItems?.reduce((acc: string[], item) => {
+                              const category = item.label || 'Other';
+                              if (!acc.includes(category)) {
+                                acc.push(category);
+                              }
+                              return acc;
+                            }, []) || [];
+                            
+                            return (
+                              <div 
+                                key={index}
+                                style={{ 
+                                  display: 'grid', 
+                                  gridTemplateColumns: '2fr 2fr 80px 80px 80px', 
+                                  padding: '8px 12px',
+                                  borderBottom: index < receipts.length - 1 ? '1px solid #2E2E2E' : 'none',
+                                  backgroundColor: index % 2 === 0 ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+                                  alignItems: 'center'
+                                }}
+                              >
+                                <div style={{ color: '#f2f2f2' }}>
+                                  {receipt.invoiceData.invoiceNumber || receipt.filename}
+                                </div>
+                                
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'flex-start', alignItems: 'center' }}>
+                                  {categories.map((category, catIndex) => (
+                                    <span
+                                      key={catIndex}
+                                      style={{
+                                        backgroundColor: category === 'Maintenance' ? 'rgba(59, 130, 246, 0.25)' :
+                                                        category === 'Appliance' ? 'rgba(16, 185, 129, 0.25)' :
+                                                        category === 'License' ? 'rgba(245, 158, 11, 0.25)' : 'rgba(107, 114, 128, 0.25)',
+                                        color: '#ffffff',
+                                        fontSize: '9px',
+                                        padding: '2px 6px',
+                                        borderRadius: '2px',
+                                        fontWeight: '500',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
+                                      }}
+                                    >
+                                      {category}
+                                    </span>
+                                  ))}
+                                  {categories.length === 0 && (
+                                    <span style={{ color: '#6b7280', fontSize: '10px' }}>No items</span>
+                                  )}
+                                </div>
+                                
+                                <div style={{ color: '#9ca3af', fontSize: '10px', textAlign: 'center' }}>
+                                  {itemCount > 0 ? itemCount : '—'}
+                                </div>
+                                
+                                <div style={{ textAlign: 'right', color: '#9ca3af', fontSize: '10px' }}>
+                                  {tax && tax > 0 ? `£${tax.toFixed(2)}` : '—'}
+                                </div>
+                                
+                                <div style={{ textAlign: 'right', color: '#f2f2f2', fontWeight: '500' }}>
+                                  {total && total > 0 ? `£${total.toFixed(2)}` : '—'}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </>
@@ -549,12 +656,49 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
             {receipt.invoiceData.lineItems && receipt.invoiceData.lineItems.length > 0 ? (
               <div className="space-y-0.5">
                 {receipt.invoiceData.lineItems.map((item, index) => (
-                  <div key={index} className="flex items-start py-0.5" style={{ gap: '12px' }}>
+                  <div key={index} className="flex items-center py-0.5" style={{ gap: '12px' }}>
                     <div className="flex-1 pr-4">
                       <p className="text-gray-200 text-sm">{item.description}</p>
                     </div>
-                    <div className="flex-shrink-0" style={{ minWidth: '80px', textAlign: 'left' }}>
-                      <p className="text-gray-400 text-xs mb-1">{item.label || 'Other'}</p>
+                    <div className="flex-shrink-0" style={{ 
+                      minWidth: '80px', 
+                      width: '80px',
+                      display: 'flex', 
+                      flexDirection: 'row', 
+                      justifyContent: 'flex-start !important', 
+                      alignItems: 'center',
+                      padding: '0 !important', 
+                      margin: '0 !important',
+                      textAlign: 'left !important'
+                    }}>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'flex-start', 
+                        alignItems: 'center',
+                        width: '100%',
+                        height: '100%'
+                      }}>
+                        <span
+                          style={{
+                            backgroundColor: (item.label === 'Maintenance') ? 'rgba(59, 130, 246, 0.25)' :
+                                            (item.label === 'Appliance') ? 'rgba(16, 185, 129, 0.25)' :
+                                            (item.label === 'License') ? 'rgba(245, 158, 11, 0.25)' : 'rgba(107, 114, 128, 0.25)',
+                            color: '#ffffff',
+                            fontSize: '9px',
+                            padding: '2px 6px',
+                            borderRadius: '2px',
+                            fontWeight: '500',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            display: 'inline-block',
+                            whiteSpace: 'nowrap',
+                            marginLeft: '0 !important',
+                            marginRight: 'auto'
+                          }}
+                        >
+                          {item.label || 'Other'}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex-shrink-0" style={{ minWidth: '60px', textAlign: 'right' }}>
                       <p className="text-white text-sm">£{item.amount.toFixed(2)}</p>
