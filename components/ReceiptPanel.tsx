@@ -48,9 +48,11 @@ interface Receipt {
 
 interface ReceiptPanelProps {
   onFileSelect?: (filename: string) => void;
+  filesDeleted?: boolean; // New prop to indicate files have been deleted
+  onReanalysisTriggered?: () => void; // Callback when re-analysis is triggered
 }
 
-export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
+export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisTriggered }: ReceiptPanelProps = {}) {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [consolidatedLineItems, setConsolidatedLineItems] = useState<LineItem[]>([]);
@@ -64,6 +66,13 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
   useEffect(() => {
     checkCacheAndFetch();
   }, []);
+
+  // Detect when files are deleted and trigger reanalysis
+  useEffect(() => {
+    if (filesDeleted) {
+      setNeedsReanalysis(true);
+    }
+  }, [filesDeleted]);
 
   useEffect(() => {
     if (!isLoading) return;
@@ -202,6 +211,11 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
       }
       
       setIsLoading(false);
+      
+      // Notify parent that re-analysis has been triggered
+      if (onReanalysisTriggered) {
+        onReanalysisTriggered();
+      }
     }
   };
 
@@ -414,7 +428,10 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
             color: '#f2f2f2', 
             margin: 0
           }}>
-            New files have been added to the data folder. Re-analyze to update the summary.
+            {filesDeleted 
+              ? "Files have been deleted from the data folder. Re-analyze to update the summary."
+              : "New files have been added to the data folder. Re-analyze to update the summary."
+            }
           </p>
           <button
             onClick={fetchAndCacheReceipts}

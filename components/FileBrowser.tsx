@@ -45,6 +45,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   const [showMapView, setShowMapView] = useState(false);
   const [showFileList, setShowFileList] = useState(true);
   const [expandedColumn, setExpandedColumn] = useState<'file-editor' | 'receipts' | null>(null);
+  const [filesDeleted, setFilesDeleted] = useState(false);
 
   const fetchFiles = async () => {
     try {
@@ -117,6 +118,8 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
           setSelectedFile(null);
           setFileContent('');
         }
+        // Mark that files have been deleted to trigger receipt reanalysis
+        setFilesDeleted(true);
       } else {
         alert(`Failed to delete file: ${data.error}`);
       }
@@ -124,6 +127,11 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
       console.error('Error deleting file:', error);
       alert(`Error deleting file: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
+  };
+
+  // Function to reset the filesDeleted flag (called when re-analysis is triggered)
+  const handleReanalysisTriggered = () => {
+    setFilesDeleted(false);
   };
 
   const getFileIcon = (extension: string) => {
@@ -559,12 +567,16 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
             }}
           >
             <div className="flex-1 min-h-0 overflow-y-auto" style={{ padding: '16px' }}>
-              <ReceiptPanel onFileSelect={(filename) => {
-                const file = files.find(f => f.name === filename);
-                if (file) {
-                  handleFileSelect(file);
-                }
-              }} />
+              <ReceiptPanel 
+                onFileSelect={(filename) => {
+                  const file = files.find(f => f.name === filename);
+                  if (file) {
+                    handleFileSelect(file);
+                  }
+                }}
+                filesDeleted={filesDeleted}
+                onReanalysisTriggered={handleReanalysisTriggered}
+              />
             </div>
           </div>
         </div>
