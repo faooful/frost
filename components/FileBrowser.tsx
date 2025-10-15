@@ -172,12 +172,12 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
     <div className="h-screen flex overflow-hidden" style={{ backgroundColor: '#171717' }}>
       {/* File List */}
       {showFileList && (
-        <div className="w-1/4 flex flex-col" style={{ padding: '8px 16px 16px', backgroundColor: '#171717', maxWidth: '256px' }}>
-          <div className="flex-1 overflow-y-auto" style={{ width: '100%' }}>
+        <div style={{ width: '240px', backgroundColor: '#171717', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
           {files.length === 0 ? (
               <div className="text-gray-500 text-center py-8">No files found</div>
           ) : (
-              <div style={{ width: '100%' }}>
+              <>
               {groupFilesByYear().map((group) => (
                 <div key={group.year} style={{ marginBottom: '16px' }}>
                   <h2 style={{ 
@@ -190,52 +190,54 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                   }}>
                     {group.year} ({group.files.length})
                   </h2>
-                  <div className="space-y-1" style={{ width: '100%' }}>
-              {group.files.map((file) => (
-                <div
-                  key={file.path}
-                  onClick={() => handleFileSelect(file)}
-                      className="flex items-center justify-between rounded cursor-pointer group"
-                    style={{
-                      backgroundColor: selectedFile?.path === file.path ? '#27272A' : 'transparent',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      width: '100%',
-                      minWidth: 0
-                    }}
-                    onMouseEnter={(e) => {
-                      if (selectedFile?.path !== file.path) {
-                        e.currentTarget.style.backgroundColor = '#27272A';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (selectedFile?.path !== file.path) {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                      }
-                    }}
-                  >
-                    <div className="flex items-center space-x-2 flex-1 min-w-0">
-                      <span className="text-lg" style={{ flexShrink: 0 }}>{getFileIcon(file.extension)}</span>
-                      <div className="flex flex-col min-w-0 flex-1" style={{ overflow: 'hidden' }}>
-                        <span 
-                          className="text-sm font-medium"
-                  style={{
+                  {group.files.map((file) => (
+                    <div
+                      key={file.path}
+                      onClick={() => handleFileSelect(file)}
+                      className="group mb-1"
+                      style={{
+                        backgroundColor: selectedFile?.path === file.path ? '#27272A' : 'transparent',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        position: 'relative'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedFile?.path !== file.path) {
+                          e.currentTarget.style.backgroundColor = '#27272A';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedFile?.path !== file.path) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
+                    >
+                      {/* File Icon */}
+                      <span style={{ marginRight: '8px' }}>{getFileIcon(file.extension)}</span>
+                      
+                      {/* File Info */}
+                      <div style={{ display: 'inline-block', width: 'calc(100% - 60px)', verticalAlign: 'top' }}>
+                        <div
+                          style={{
                             fontSize: '14px',
                             fontWeight: '500',
-                            color: selectedFile?.path === file.path ? '#f2f2f2' : '#f2f2f2',
-                            display: 'block',
+                            color: '#f2f2f2',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            marginBottom: '2px'
+                          }}
+                        >
+                          {file.name}
+                        </div>
+                        <div
+                          style={{ 
+                            fontSize: '12px',
+                            color: '#9ca3af',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap'
-                          }}
-                        >
-                 {file.name}
-                        </span>
-                        <span 
-                          className="text-xs text-gray-400"
-                          style={{ 
-                            fontSize: '12px',
-                            color: 'hsl(0 0% 65%)'
                           }}
                         >
                           {new Date(file.lastModified).toLocaleDateString('en-US', { 
@@ -245,55 +247,59 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                             minute: '2-digit',
                             hour12: true 
                           })}
-                        </span>
+                        </div>
                       </div>
+
+                      {/* Delete Button - Absolute positioned */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFileToDelete(file);
+                          setShowFileDeleteConfirmation(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          padding: '4px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          color: '#ef4444',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '24px',
+                          height: '24px'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#ef4444';
+                          e.currentTarget.style.color = '#f2f2f2';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                          e.currentTarget.style.color = '#ef4444';
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3,6 5,6 21,6"/>
+                          <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"/>
+                          <line x1="10" y1="11" x2="10" y2="17"/>
+                          <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFileToDelete(file);
-                        setShowFileDeleteConfirmation(true);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{
-                        padding: '4px',
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        color: '#ef4444',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = '#ef4444';
-                        e.currentTarget.style.color = '#f2f2f2';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = '#ef4444';
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="3,6 5,6 21,6"/>
-                        <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"/>
-                        <line x1="10" y1="11" x2="10" y2="17"/>
-                        <line x1="14" y1="11" x2="14" y2="17"/>
-                      </svg>
-                    </button>
-                    </div>
-              ))}
-                  </div>
+                  ))}
                 </div>
               ))}
-            </div>
+              </>
           )}
-        </div>
-
+          </div>
+          
           {/* New File Button - Aligned to bottom */}
-          <div style={{ paddingTop: '12px', borderTop: '1px solid rgb(46, 46, 46)' }}>
+          <div style={{ paddingTop: '12px', borderTop: '1px solid rgb(46, 46, 46)', padding: '12px 8px' }}>
             <button
               onClick={async () => {
                 try {
