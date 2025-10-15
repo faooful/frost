@@ -27,6 +27,7 @@ interface LineItem {
   amount: number;
   source?: string; // Which invoice this came from
   sourceFile?: string; // The actual filename/path
+  label?: string; // Category label: Maintenance, Appliance, License, Other
 }
 
 interface Receipt {
@@ -130,6 +131,45 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
     }
   };
 
+  const labelLineItems = async (lineItems: LineItem[]): Promise<LineItem[]> => {
+    if (!lineItems || lineItems.length === 0) {
+      return lineItems;
+    }
+
+    console.log('Labeling line items:', lineItems.map(item => item.description));
+
+    try {
+      const response = await fetch('/api/receipts/label-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineItems })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.labeledItems) {
+          console.log('Successfully labeled items:', data.labeledItems.map((item: LineItem) => ({ description: item.description, label: item.label })));
+          return data.labeledItems;
+        } else {
+          console.error('Labeling API returned unsuccessful response:', data);
+        }
+      } else {
+        console.error('Labeling API request failed:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+      }
+    } catch (error) {
+      console.error('Error labeling line items:', error);
+    }
+
+    // Fallback: return items with default "Other" label
+    console.log('Using fallback labeling for items');
+    return lineItems.map(item => ({
+      ...item,
+      label: item.label || 'Other'
+    }));
+  };
+
   const fetchAndCacheReceipts = async () => {
     // Show the animation for at least 3 seconds (gives time for PixelBlast to load)
     const startTime = Date.now();
@@ -143,7 +183,6 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
       
       if (response.ok) {
         const data = await response.json();
-        setReceipts(data.receipts || []);
         
         // Consolidate all line items from all receipts
         const allLineItems: LineItem[] = [];
@@ -178,7 +217,26 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
           }
         });
         
-        setConsolidatedLineItems(allLineItems);
+        // Label all line items (both consolidated and individual receipts)
+        const labeledLineItems = await labelLineItems(allLineItems);
+        
+        // Also label line items in individual receipts
+        const labeledReceipts = await Promise.all(data.receipts.map(async (receipt: Receipt) => {
+          if (receipt.invoiceData?.lineItems && receipt.invoiceData.lineItems.length > 0) {
+            const labeledReceiptLineItems = await labelLineItems(receipt.invoiceData.lineItems);
+            return {
+              ...receipt,
+              invoiceData: {
+                ...receipt.invoiceData,
+                lineItems: labeledReceiptLineItems
+              }
+            };
+          }
+          return receipt;
+        }));
+        
+        setReceipts(labeledReceipts);
+        setConsolidatedLineItems(labeledLineItems);
         setTotalVAT(vat);
         setGrandTotal(total);
         
@@ -191,8 +249,8 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            receipts: data.receipts,
-            consolidatedLineItems: allLineItems,
+            receipts: labeledReceipts,
+            consolidatedLineItems: labeledLineItems,
             totalVAT: vat,
             grandTotal: total,
             fileList,
@@ -498,9 +556,16 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
             {receipt.invoiceData.lineItems && receipt.invoiceData.lineItems.length > 0 ? (
               <div className="space-y-0.5">
                 {receipt.invoiceData.lineItems.map((item, index) => (
-                  <div key={index} className="flex justify-between items-start py-0.5">
-                    <p className="text-gray-200 flex-1 pr-8">{item.description}</p>
-                    <p className="text-white">£{item.amount.toFixed(2)}</p>
+                  <div key={index} className="flex items-start py-0.5" style={{ gap: '12px' }}>
+                    <div className="flex-1 pr-4">
+                      <p className="text-gray-200 text-sm">{item.description}</p>
+                    </div>
+                    <div className="flex-shrink-0" style={{ minWidth: '80px', textAlign: 'left' }}>
+                      <p className="text-gray-400 text-xs mb-1">{item.label || 'Other'}</p>
+                    </div>
+                    <div className="flex-shrink-0" style={{ minWidth: '60px', textAlign: 'right' }}>
+                      <p className="text-white text-sm">£{item.amount.toFixed(2)}</p>
+                    </div>
                   </div>
                 ))}
               </div>
