@@ -396,21 +396,54 @@ export function ReceiptPanel({ onFileSelect }: ReceiptPanelProps = {}) {
 
       {/* Re-analysis Banner */}
       {needsReanalysis && (
-        <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600/50 rounded">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <p className="font-semibold text-yellow-400 mb-1">New PDFs detected</p>
-              <p className="text-yellow-200/80">
-                New invoice files have been added to the data folder. Re-analyze to include them in the receipt.
-              </p>
-            </div>
-            <button
-              onClick={fetchAndCacheReceipts}
-              className="ml-4 px-3 py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded transition-colors"
-            >
-              Re-analyze
-            </button>
-          </div>
+        <div 
+          className="mb-4"
+          style={{
+            backgroundColor: 'rgb(31, 31, 31)',
+            padding: '16px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '16px',
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+          }}
+        >
+          <p className="receipt-banner-text" style={{ 
+            color: '#f2f2f2', 
+            margin: 0
+          }}>
+            New files have been added to the data folder. Re-analyze to update the summary.
+          </p>
+          <button
+            onClick={fetchAndCacheReceipts}
+            style={{
+              padding: '8px',
+              backgroundColor: '#68A6E4',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#5a9bd4';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#68A6E4';
+            }}
+          >
+            <img 
+              src="/icons/refresh-ccw.svg" 
+              alt="Refresh" 
+              width="16" 
+              height="16" 
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
+          </button>
         </div>
       )}
 

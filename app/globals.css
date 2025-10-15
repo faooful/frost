@@ -222,3 +222,10 @@ button:hover {
   font-size: 14px !important;
   font-weight: 700 !important;
 }
+
+/* Exception for banner text - use Inter font */
+.receipt-banner-text {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+}
