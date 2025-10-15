@@ -8,6 +8,7 @@ import { PDFViewer } from './PDFViewer';
 interface FileEditorProps {
   selectedFile: FileInfo | null;
   fileContent: string;
+  isLoading?: boolean;
   onFileUpdated: (file: FileInfo) => void;
   onFileCreated: (file: FileInfo) => void;
   onFileRenamed?: (file: FileInfo) => void;
@@ -20,8 +21,8 @@ interface FileEditorProps {
   }) => void;
 }
 
-export function FileEditor({ selectedFile, fileContent, onFileUpdated, onFileCreated, onFileRenamed, onSaveStateChange }: FileEditorProps) {
-  const [content, setContent] = useState('');
+export function FileEditor({ selectedFile, fileContent, isLoading = false, onFileUpdated, onFileCreated, onFileRenamed, onSaveStateChange }: FileEditorProps) {
+  const [content, setContent] = useState(fileContent || '');
   const [filename, setFilename] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -95,6 +96,13 @@ export function FileEditor({ selectedFile, fileContent, onFileUpdated, onFileCre
       setHighlightedText(null);
     }
   }, [selectedFile]);
+
+  // Sync internal content state with fileContent prop to prevent flashing
+  useEffect(() => {
+    if (fileContent !== undefined && fileContent !== content && !hasUnsavedChanges) {
+      setContent(fileContent);
+    }
+  }, [fileContent, content, hasUnsavedChanges]);
 
   // Notify parent when save state changes
   useEffect(() => {
@@ -463,7 +471,39 @@ export function FileEditor({ selectedFile, fileContent, onFileUpdated, onFileCre
 
       {/* Editor */}
       <div className="flex-1 flex flex-col">
-        {isPDF ? (
+        {isLoading ? (
+          // Loading placeholder - use actual textarea for exact same dimensions
+          <textarea
+            readOnly
+            disabled
+            value="Loading content..."
+            className="w-full px-3 py-2 bg-transparent text-white focus:outline-none resize-none font-medium border-0 overflow-y-auto"
+            style={{ 
+              height: '100%',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              fontSize: '14px',
+              lineHeight: '1.6',
+              color: 'rgb(100, 100, 100) !important',
+              fontWeight: '100'
+            }}
+          />
+        ) : !selectedFile ? (
+          // No file selected placeholder - use actual textarea for exact same dimensions
+          <textarea
+            readOnly
+            disabled
+            value="Select a file to edit or create a new one"
+            className="w-full px-3 py-2 bg-transparent text-white focus:outline-none resize-none font-medium border-0 overflow-y-auto"
+            style={{ 
+              height: '100%',
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              fontSize: '14px',
+              lineHeight: '1.6',
+              color: 'rgb(100, 100, 100) !important',
+              fontWeight: '100'
+            }}
+          />
+        ) : isPDF ? (
           <PDFViewer 
             filePath={selectedFile.path} 
             onTextExtracted={(text, invoiceData) => {

@@ -309,14 +309,6 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
     );
   }
 
-  if (receipts.length === 0) {
-    return (
-      <div className="p-8 text-center text-gray-400">
-        <p>No invoices found.</p>
-        <p className="text-sm mt-2">Add PDF invoices to the data folder to see them here.</p>
-      </div>
-    );
-  }
 
   // Get the latest date from all receipts
   const getLatestMonthYear = () => {

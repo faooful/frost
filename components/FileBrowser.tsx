@@ -47,6 +47,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   const [expandedColumn, setExpandedColumn] = useState<'file-editor' | 'receipts' | null>(null);
   const [filesDeleted, setFilesDeleted] = useState(false);
   const [isReceiptPanelLoading, setIsReceiptPanelLoading] = useState(false);
+  const [isFileContentLoading, setIsFileContentLoading] = useState(false);
 
   const fetchFiles = async () => {
     try {
@@ -92,6 +93,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   const handleFileSelect = async (file: FileInfo) => {
     setSelectedFile(file);
     setEditingFilename('');
+    setIsFileContentLoading(true);
     
     try {
       const response = await fetch(`/api/files/content?path=${encodeURIComponent(file.path)}`);
@@ -102,6 +104,8 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
       }
     } catch (error) {
       console.error('Error loading file content:', error);
+    } finally {
+      setIsFileContentLoading(false);
     }
   };
 
@@ -117,7 +121,8 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
         setFiles(prevFiles => prevFiles.filter(f => f.path !== file.path));
         if (selectedFile?.path === file.path) {
           setSelectedFile(null);
-      setFileContent('');
+          setFileContent('');
+          setIsFileContentLoading(false);
         }
         // Mark that files have been deleted to trigger receipt reanalysis
         setFilesDeleted(true);
@@ -168,14 +173,6 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
     }));
   };
 
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <span className="text-lg">Loading files...</span>
-        <span className="ml-2 text-gray-600">Initializing...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen flex overflow-hidden" style={{ backgroundColor: '#171717' }}>
@@ -530,6 +527,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
         <FileEditor
           selectedFile={selectedFile}
                 fileContent={fileContent}
+                isLoading={isFileContentLoading}
                 onFileUpdated={(file) => {
                   setFiles(prevFiles => {
                     const isRename = selectedFile && selectedFile.path !== file.path;
