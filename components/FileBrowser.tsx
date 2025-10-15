@@ -178,9 +178,30 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
     <div className="h-screen flex overflow-hidden" style={{ backgroundColor: '#171717' }}>
       {/* File List */}
       {showFileList && (
-        <div style={{ width: '240px', backgroundColor: '#171717', height: '100vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ 
+          width: '240px', 
+          minWidth: '240px', 
+          maxWidth: '240px',
+          flexShrink: 0,
+          backgroundColor: '#171717', 
+          height: '100vh', 
+          display: 'flex', 
+          flexDirection: 'column' 
+        }}>
           <div style={{ flex: 1, overflowY: 'auto', padding: '8px' }}>
-          {files.length === 0 ? (
+          {isLoading ? (
+              // Loading placeholder that maintains consistent height for file list
+              <div style={{ minHeight: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ 
+                  textAlign: 'center', 
+                  color: '#666', 
+                  fontSize: '14px',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
+                }}>
+                  Loading files...
+                </div>
+              </div>
+          ) : files.length === 0 ? (
               <div className="text-gray-500 text-center py-8">No files found</div>
           ) : (
               <>
@@ -413,57 +434,57 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
       {expandedColumn !== 'receipts' && (
         <div className="flex flex-col" style={{ 
           width: expandedColumn === 'file-editor' ? '100%' : '50%',
+          flex: expandedColumn === 'file-editor' ? '1 1 100%' : '1 1 50%',
+          minWidth: 0,
           padding: '0px 8px 16px 16px',
           height: '100vh'
         }}>
-          {/* File Name Header */}
-          {selectedFile && (
-            <div className="w-full" style={{ height: '56px' }}>
-              <div className="flex items-center justify-between h-full">
-                <div className="flex items-center" style={{ gap: '4px' }}>
-                  <button
-                    onClick={() => setShowFileList(!showFileList)}
-                    className="save-button"
-                    style={{
-                      padding: '8px 16px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      color: '#f2f2f2',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                      <line x1="9" y1="3" x2="9" y2="21"/>
-                    </svg>
-                  </button>
-                  <div
-                    className="text-lg font-medium bg-transparent border-none outline-none"
-                    style={{
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      color: '#f2f2f2',
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      flex: 1,
-                      minWidth: 0,
-                      overflow: 'visible',
-                      whiteSpace: 'nowrap',
-                      fontFamily: '"Lora", serif'
-                    }}
-                  >
-                    {selectedFile.name}
-                  </div>
-                </div>
-                <div className="flex items-center" style={{ gap: '8px' }}>
+          {/* File Name Header - Always render to prevent layout shifts */}
+          <div className="w-full" style={{ height: '56px' }}>
+            <div className="flex items-center justify-between h-full">
+              <div className="flex items-center" style={{ gap: '4px' }}>
+                <button
+                  onClick={() => setShowFileList(!showFileList)}
+                  className="save-button"
+                  style={{
+                    padding: '8px 16px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    color: '#f2f2f2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/>
+                  </svg>
+                </button>
+                <div
+                  className="text-lg font-medium bg-transparent border-none outline-none"
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    color: selectedFile ? '#f2f2f2' : '#666',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: 'visible',
+                    whiteSpace: 'nowrap',
+                    fontFamily: '"Lora", serif'
+                  }}
+                >
+                  {selectedFile ? selectedFile.name : 'No file selected'}
                 </div>
               </div>
+              <div className="flex items-center" style={{ gap: '8px' }}>
+              </div>
             </div>
-          )}
+          </div>
 
           {/* File Editor Container */}
           <div 

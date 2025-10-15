@@ -492,7 +492,7 @@ export function FileEditor({ selectedFile, fileContent, isLoading = false, onFil
           <textarea
             readOnly
             disabled
-            value="Select a file to edit or create a new one"
+            value=""
             className="w-full px-3 py-2 bg-transparent text-white focus:outline-none resize-none font-medium border-0 overflow-y-auto"
             style={{ 
               height: '100%',
@@ -597,9 +597,7 @@ export function FileEditor({ selectedFile, fileContent, isLoading = false, onFil
           <div className="space-y-2">
           </div>
         ) : (
-          <div className="text-blue-200  font-medium" style={{ fontSize: '14px', lineHeight: '1.6', color: '#f2f2f2' }}>
-            Select a file to edit or create a new one
-          </div>
+          <div></div>
         )}
       </div>
     </div>
