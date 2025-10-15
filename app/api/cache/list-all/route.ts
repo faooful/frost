@@ -4,7 +4,7 @@ import path from 'path';
 
 export async function GET() {
   try {
-    const cacheDir = path.join(process.cwd(), '.analysis-cache');
+    const cacheDir = path.join(process.cwd(), 'analysis-cache');
     
     if (!fs.existsSync(cacheDir)) {
       return NextResponse.json([]);

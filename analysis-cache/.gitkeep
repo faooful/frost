@@ -1,0 +1,5 @@
+# This file ensures the .analysis-cache folder is tracked by git
+# while keeping the actual analysis data private
+# 
+# Analysis cache files will be created here automatically
+# but the actual content will be ignored by git

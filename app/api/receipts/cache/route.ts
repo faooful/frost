@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-const CACHE_DIR = '.analysis-cache';
+const CACHE_DIR = 'analysis-cache';
 const RECEIPTS_CACHE_FILE = path.join(CACHE_DIR, 'receipts.json');
 
 // GET - Retrieve cached receipt data

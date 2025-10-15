@@ -3,7 +3,7 @@ import path from 'path';
 import { AnalysisResult, CachedAnalysis } from './analysisCache';
 
 // Cache directory
-const CACHE_DIR = path.join(process.cwd(), '.analysis-cache');
+const CACHE_DIR = path.join(process.cwd(), 'analysis-cache');
 
 // Ensure cache directory exists
 if (!fs.existsSync(CACHE_DIR)) {

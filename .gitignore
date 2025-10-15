@@ -34,8 +34,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# analysis cache
-.analysis-cache/
+# analysis cache - ignore cache files but keep folder structure
+analysis-cache/*.json
+analysis-cache/*.txt
+analysis-cache/*.log
+# Keep the folder structure with .gitkeep
+!analysis-cache/.gitkeep
 
 # data folder - ignore PDF files and other content but keep folder structure
 data/*.pdf

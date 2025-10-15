@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cacheDir = path.join(process.cwd(), '.analysis-cache');
+    const cacheDir = path.join(process.cwd(), 'analysis-cache');
     const filePath = path.join(cacheDir, `${analysisId}.json`);
 
     // Check if the file exists

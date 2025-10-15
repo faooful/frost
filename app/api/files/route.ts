@@ -54,7 +54,7 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Delete associated analysis cache files
-    const cacheDir = path.join(process.cwd(), '.analysis-cache');
+    const cacheDir = path.join(process.cwd(), 'analysis-cache');
     if (fs.existsSync(cacheDir)) {
       const cacheFiles = fs.readdirSync(cacheDir);
       let deletedCacheCount = 0;

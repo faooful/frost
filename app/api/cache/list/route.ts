@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get all cached analyses for this file
-    const cacheDir = path.join(process.cwd(), '.analysis-cache');
+    const cacheDir = path.join(process.cwd(), 'analysis-cache');
     const cachedAnalyses = [];
 
     try {

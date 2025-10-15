@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest) {
 
     // Update associated AI analysis cache files
     try {
-      const cacheDir = path.join(process.cwd(), '.analysis-cache');
+      const cacheDir = path.join(process.cwd(), 'analysis-cache');
       if (fs.existsSync(cacheDir)) {
         const cacheFiles = fs.readdirSync(cacheDir);
         let updatedCacheCount = 0;
