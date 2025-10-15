@@ -7,7 +7,33 @@ import { NewAnalysisPanel } from './NewAnalysisPanel';
 import { FileDeleteConfirmationPanel } from './FileDeleteConfirmationPanel';
 import { MapView } from './MapView';
 import { ReceiptPanel } from './ReceiptPanel';
+import { DashboardPreview } from './DashboardPreview';
 import { FileInfo } from '@/lib/clientUtils';
+
+interface LineItem {
+  description: string;
+  amount: number;
+  source?: string;
+  sourceFile?: string;
+  label?: string;
+}
+
+interface Receipt {
+  filename: string;
+  filePath: string;
+  invoiceData: {
+    invoiceNumber: string | null;
+    date: string | null;
+    totalAmount: number | null;
+    subtotal: number | null;
+    tax: number | null;
+    balanceDue: number | null;
+    paid: number | null;
+    lineItems: LineItem[];
+    vendor: string | null;
+  };
+  error?: string;
+}
 
 interface CachedAnalysis {
   filename: string;
@@ -48,6 +74,12 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   const [filesDeleted, setFilesDeleted] = useState(false);
   const [isReceiptPanelLoading, setIsReceiptPanelLoading] = useState(false);
   const [isFileContentLoading, setIsFileContentLoading] = useState(false);
+  
+  // Receipt data state for dashboard
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [consolidatedLineItems, setConsolidatedLineItems] = useState<LineItem[]>([]);
+  const [totalVAT, setTotalVAT] = useState(0);
+  const [grandTotal, setGrandTotal] = useState(0);
 
   const fetchFiles = async () => {
     try {
@@ -81,14 +113,22 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   useEffect(() => {
     fetchFiles();
     fetchCachedAnalyses();
+    fetchReceiptData(); // Fetch receipt data for dashboard
   }, []);
 
-  // Auto-select the first file when files are loaded
+  // Auto-select the first file when files are loaded - DISABLED to show dashboard by default
+  // useEffect(() => {
+  //   if (files.length > 0 && !selectedFile) {
+  //     handleFileSelect(files[0]);
+  //   }
+  // }, [files]);
+
+  // Refresh receipt data when files are deleted
   useEffect(() => {
-    if (files.length > 0 && !selectedFile) {
-      handleFileSelect(files[0]);
+    if (filesDeleted) {
+      fetchReceiptData();
     }
-  }, [files]);
+  }, [filesDeleted]);
 
   const handleFileSelect = async (file: FileInfo) => {
     setSelectedFile(file);
@@ -138,6 +178,72 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   // Function to reset the filesDeleted flag (called when re-analysis is triggered)
   const handleReanalysisTriggered = () => {
     setFilesDeleted(false);
+  };
+
+  const handleDeselectFile = () => {
+    setSelectedFile(null);
+    setFileContent('');
+    setIsFileContentLoading(false);
+  };
+
+  // Function to fetch receipt data for dashboard
+  const fetchReceiptData = async () => {
+    try {
+      // Step 1: Try to load from cache first
+      const cacheResponse = await fetch('/api/receipts/cache');
+      const cacheData = await cacheResponse.json();
+      
+      if (cacheData.success && cacheData.data) {
+        const cached = cacheData.data;
+        setReceipts(cached.receipts || []);
+        setConsolidatedLineItems(cached.consolidatedLineItems || []);
+        setTotalVAT(cached.totalVAT || 0);
+        setGrandTotal(cached.grandTotal || 0);
+      } else {
+        // No cache found, fetch fresh data
+        const response = await fetch('/api/receipts/all');
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Process the data similar to ReceiptPanel
+          const allLineItems: LineItem[] = [];
+          let vat = 0;
+          let total = 0;
+          
+          data.receipts.forEach((receipt: Receipt) => {
+            if (receipt.invoiceData?.lineItems && receipt.invoiceData.lineItems.length > 0) {
+              receipt.invoiceData.lineItems.forEach(item => {
+                allLineItems.push({
+                  ...item,
+                  source: receipt.invoiceData.invoiceNumber || receipt.filename,
+                  sourceFile: receipt.filename
+                });
+              });
+            }
+            
+            if (receipt.invoiceData?.tax) {
+              vat += receipt.invoiceData.tax;
+            }
+            
+            if (receipt.invoiceData?.totalAmount) {
+              total += receipt.invoiceData.totalAmount;
+            } else if (receipt.invoiceData?.balanceDue) {
+              total += receipt.invoiceData.balanceDue;
+            } else if (receipt.invoiceData?.subtotal !== null && receipt.invoiceData?.tax !== null) {
+              total += receipt.invoiceData.subtotal + receipt.invoiceData.tax;
+            }
+          });
+          
+          setReceipts(data.receipts);
+          setConsolidatedLineItems(allLineItems);
+          setTotalVAT(vat);
+          setGrandTotal(total);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching receipt data:', error);
+    }
   };
 
   const getFileIcon = (extension: string) => {
@@ -482,6 +588,36 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                 </div>
               </div>
               <div className="flex items-center" style={{ gap: '8px' }}>
+                {selectedFile && selectedFile.extension === '.pdf' && (
+                  <button
+                    onClick={handleDeselectFile}
+                    className="save-button"
+                    style={{
+                      padding: '4px',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#9ca3af',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '4px'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#27272A';
+                      e.currentTarget.style.color = '#f2f2f2';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.color = '#9ca3af';
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"/>
+                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -545,44 +681,53 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
               </div>
         </div>
             <div className="flex-1 overflow-y-auto" style={{ paddingLeft: '12px', paddingRight: '12px' }}>
-        <FileEditor
-          selectedFile={selectedFile}
-                fileContent={fileContent}
-                isLoading={isFileContentLoading}
-                onFileUpdated={(file) => {
-                  setFiles(prevFiles => {
-                    const isRename = selectedFile && selectedFile.path !== file.path;
-                    if (isRename) {
-                      return prevFiles.filter(f => f.path !== selectedFile.path).concat(file);
-                    } else {
-                      return prevFiles.map(f => f.path === file.path ? file : f);
+              {selectedFile ? (
+                <FileEditor
+                  selectedFile={selectedFile}
+                  fileContent={fileContent}
+                  isLoading={isFileContentLoading}
+                  onFileUpdated={(file) => {
+                    setFiles(prevFiles => {
+                      const isRename = selectedFile && selectedFile.path !== file.path;
+                      if (isRename) {
+                        return prevFiles.filter(f => f.path !== selectedFile.path).concat(file);
+                      } else {
+                        return prevFiles.map(f => f.path === file.path ? file : f);
+                      }
+                    });
+                    if (selectedFile && (selectedFile.path === file.path || selectedFile.name === file.name)) {
+                      setSelectedFile(file);
                     }
-                  });
-                  if (selectedFile && (selectedFile.path === file.path || selectedFile.name === file.name)) {
-                    setSelectedFile(file);
-                  }
-                }}
-                onFileCreated={(file) => {
-                  setFiles(prevFiles => [...prevFiles, file]);
-                }}
-                onFileRenamed={(file) => {
-                  setFiles(prevFiles => {
-                    const isRename = selectedFile && selectedFile.path !== file.path;
-                    if (isRename) {
-                      return prevFiles.filter(f => f.path !== selectedFile.path).concat(file);
-                    } else {
-                      return prevFiles.map(f => f.path === file.path ? file : f);
+                  }}
+                  onFileCreated={(file) => {
+                    setFiles(prevFiles => [...prevFiles, file]);
+                  }}
+                  onFileRenamed={(file) => {
+                    setFiles(prevFiles => {
+                      const isRename = selectedFile && selectedFile.path !== file.path;
+                      if (isRename) {
+                        return prevFiles.filter(f => f.path !== selectedFile.path).concat(file);
+                      } else {
+                        return prevFiles.map(f => f.path === file.path ? file : f);
+                      }
+                    });
+                    if (selectedFile && (selectedFile.path === file.path || selectedFile.name === file.name)) {
+                      setSelectedFile(file);
                     }
-                  });
-                  if (selectedFile && (selectedFile.path === file.path || selectedFile.name === file.name)) {
-                    setSelectedFile(file);
-                  }
-                }}
-                onSaveStateChange={(state: any) => {
-                  setSaveState(state as SaveState);
-                }}
-        />
-      </div>
+                  }}
+                  onSaveStateChange={(state: any) => {
+                    setSaveState(state as SaveState);
+                  }}
+                />
+              ) : (
+                <DashboardPreview
+                  receipts={receipts}
+                  consolidatedLineItems={consolidatedLineItems}
+                  totalVAT={totalVAT}
+                  grandTotal={grandTotal}
+                />
+              )}
+            </div>
           </div>
         </div>
       )}

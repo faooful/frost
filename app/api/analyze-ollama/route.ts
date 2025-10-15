@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     try {
       analysis = await analyzeWithOllama(content, filename);
     } catch (error) {
-      console.log('Ollama not available, using mock analysis:', error.message);
+      console.log('Ollama not available, using mock analysis:', error instanceof Error ? error.message : error);
       analysis = await analyzeWithMock(content, filename);
     }
 

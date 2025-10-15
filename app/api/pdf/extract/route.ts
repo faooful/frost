@@ -183,10 +183,10 @@ function extractInvoiceData(text: string) {
     taxMatch = text.match(/vat\s+at\s+\d+%/i);
     if (taxMatch) {
       // Look for VAT amount near VAT rate
-      const vatContext = text.substring(Math.max(0, taxMatch.index - 50), Math.min(text.length, (taxMatch.index || 0) + 50));
+      const vatContext = text.substring(Math.max(0, (taxMatch.index || 0) - 50), Math.min(text.length, (taxMatch.index || 0) + 50));
       const vatAmountMatch = vatContext.match(/(?:£|$|€)?\s*(\d+[,\d]*\.?\d{0,2})\s*(?:vat|tax|total)/i);
       if (vatAmountMatch) {
-        taxMatch = [null, vatAmountMatch[1]];
+        taxMatch = ['', vatAmountMatch[1]];
       }
     }
   }

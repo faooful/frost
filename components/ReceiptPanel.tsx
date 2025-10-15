@@ -625,8 +625,8 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
       {/* Individual Receipts */}
       <div className="flex-1">
         {receipts.map((receipt, receiptIndex) => (
-          <>
-          <div key={receiptIndex} style={{ paddingBottom: '16px' }}>
+          <div key={receiptIndex}>
+          <div style={{ paddingBottom: '16px' }}>
             {/* Receipt Header */}
             <div className="mb-3">
               <span
@@ -747,7 +747,7 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
               opacity: 0.5
             }}></div>
           )}
-          </>
+          </div>
         ))}
       </div>
 
