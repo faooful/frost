@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import {
   Dialog,
   DialogContent,
@@ -13,14 +12,7 @@ import {
   DialogOverlay,
 } from "@/components/ui/dialog";
 
-const PixelBlast = dynamic(() => import('./PixelBlast'), { 
-  ssr: false,
-  loading: () => (
-    <div className="h-full w-full flex items-center justify-center bg-gray-900">
-      <p className="text-white text-sm font-mono">Loading effect...</p>
-    </div>
-  )
-});
+import LiquidChrome from './LiquidChrome';
 
 interface LineItem {
   description: string;
@@ -51,11 +43,12 @@ interface ReceiptPanelProps {
   onFileSelect?: (filename: string) => void;
   filesDeleted?: boolean; // New prop to indicate files have been deleted
   onReanalysisTriggered?: () => void; // Callback when re-analysis is triggered
+  onLoadingStateChange?: (isLoading: boolean) => void; // Callback to notify parent of loading state
 }
 
-export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisTriggered }: ReceiptPanelProps = {}) {
+export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisTriggered, onLoadingStateChange }: ReceiptPanelProps = {}) {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [consolidatedLineItems, setConsolidatedLineItems] = useState<LineItem[]>([]);
   const [totalVAT, setTotalVAT] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
@@ -75,6 +68,13 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
     }
   }, [filesDeleted]);
 
+  // Notify parent of loading state changes
+  useEffect(() => {
+    if (onLoadingStateChange) {
+      onLoadingStateChange(isLoading);
+    }
+  }, [isLoading, onLoadingStateChange]);
+
   useEffect(() => {
     if (!isLoading) return;
     
@@ -87,8 +87,6 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
 
   const checkCacheAndFetch = async () => {
     try {
-      setIsLoading(true);
-      
       // Step 1: Try to load from cache first
       const cacheResponse = await fetch('/api/receipts/cache');
       const cacheData = await cacheResponse.json();
@@ -122,6 +120,7 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
         }
       } else {
         // No cache found, fetch fresh data
+        setIsLoading(true);
         await fetchAndCacheReceipts();
       }
     } catch (error) {
@@ -279,31 +278,33 @@ export function ReceiptPanel({ onFileSelect, filesDeleted = false, onReanalysisT
 
   if (isLoading) {
     return (
-      <div className="h-full w-full relative overflow-hidden bg-gray-900">
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <PixelBlast
-            variant="circle"
-            pixelSize={6}
-            color="#B19EEF"
-            patternScale={3}
-            patternDensity={1.2}
-            pixelSizeJitter={0.5}
-            enableRipples={true}
-            rippleSpeed={0.4}
-            rippleThickness={0.12}
-            rippleIntensityScale={1.5}
-            liquid={true}
-            liquidStrength={0.12}
-            liquidRadius={1.2}
-            liquidWobbleSpeed={5}
-            speed={0.6}
-            edgeFade={0.25}
-            transparent={true}
-          />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 10, pointerEvents: 'none' }}>
-          <p className="text-white text-sm font-mono">Analyzing receipts...</p>
-        </div>
+      <div 
+        className="h-full w-full relative overflow-hidden flex items-center justify-center"
+        style={{ 
+          width: '100%',
+          height: '100%'
+        }}
+      >
+        <LiquidChrome
+          key="loading-animation"
+          baseColor={[0.2, 0.2, 0.2]} // Dark gray color
+          speed={0.1}
+          amplitude={0.3}
+          interactive={false}
+        />
+        <h2 
+          style={{
+            position: 'absolute',
+            fontSize: '20px',
+            fontFamily: '"Lora", serif',
+            color: '#f2f2f2',
+            textAlign: 'center',
+            zIndex: 51,
+            margin: 0
+          }}
+        >
+          Generating Summary
+        </h2>
       </div>
     );
   }

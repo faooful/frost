@@ -377,14 +377,25 @@ const PixelBlast = ({
         threeRef.current = null;
       }
       const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl2', { antialias, alpha: true });
-      if (!gl) return;
+      let gl = canvas.getContext('webgl2', { antialias, alpha: true });
+      if (!gl) {
+        console.error('Failed to get WebGL2 context, trying WebGL...');
+        gl = canvas.getContext('webgl', { antialias, alpha: true });
+        if (!gl) {
+          console.error('Failed to get WebGL context - PixelBlast animation disabled');
+          return;
+        }
+      }
+      console.log('PixelBlast: WebGL context initialized successfully');
       const renderer = new THREE.WebGLRenderer({
         canvas,
         context: gl,
         antialias,
-        alpha: true
+        alpha: transparent
       });
+      if (!transparent) {
+        renderer.setClearColor(0x0a0a0a, 1);
+      }
       renderer.domElement.style.width = '100%';
       renderer.domElement.style.height = '100%';
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));

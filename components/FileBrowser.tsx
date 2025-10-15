@@ -46,6 +46,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
   const [showFileList, setShowFileList] = useState(true);
   const [expandedColumn, setExpandedColumn] = useState<'file-editor' | 'receipts' | null>(null);
   const [filesDeleted, setFilesDeleted] = useState(false);
+  const [isReceiptPanelLoading, setIsReceiptPanelLoading] = useState(false);
 
   const fetchFiles = async () => {
     try {
@@ -116,7 +117,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
         setFiles(prevFiles => prevFiles.filter(f => f.path !== file.path));
         if (selectedFile?.path === file.path) {
           setSelectedFile(null);
-          setFileContent('');
+      setFileContent('');
         }
         // Mark that files have been deleted to trigger receipt reanalysis
         setFilesDeleted(true);
@@ -199,9 +200,9 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                     {group.year} ({group.files.length})
                   </h2>
                   {group.files.map((file) => (
-                    <div
-                      key={file.path}
-                      onClick={() => handleFileSelect(file)}
+                <div
+                  key={file.path}
+                  onClick={() => handleFileSelect(file)}
                       className="group mb-1"
                       style={{
                         backgroundColor: selectedFile?.path === file.path ? '#27272A' : 'transparent',
@@ -227,7 +228,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                       {/* File Info */}
                       <div style={{ display: 'inline-block', width: 'calc(100% - 60px)', verticalAlign: 'top' }}>
                         <div
-                          style={{
+                  style={{
                             fontSize: '14px',
                             fontWeight: '500',
                             color: '#f2f2f2',
@@ -237,8 +238,8 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                             marginBottom: '2px'
                           }}
                         >
-                          {file.name}
-                        </div>
+                 {file.name}
+               </div>
                         <div
                           style={{ 
                             fontSize: '12px',
@@ -255,7 +256,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                             minute: '2-digit',
                             hour12: true 
                           })}
-                        </div>
+               </div>
                       </div>
 
                       {/* Delete Button - Absolute positioned */}
@@ -408,7 +409,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
               <img src="/icons/upload.svg" alt="Upload" width="16" height="16" style={{ filter: 'brightness(0) invert(1)' }} />
             </button>
           </div>
-        </div>
+                    </div>
       )}
 
       {/* File Editor Column */}
@@ -524,7 +525,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                   />
                 </button>
               </div>
-            </div>
+        </div>
             <div className="flex-1 overflow-y-auto" style={{ paddingLeft: '12px', paddingRight: '12px' }}>
         <FileEditor
           selectedFile={selectedFile}
@@ -583,7 +584,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
               minHeight: 0
             }}
           >
-            <div className="flex-1 min-h-0 overflow-y-auto" style={{ padding: '16px' }}>
+            <div className="flex-1 min-h-0 overflow-y-auto" style={{ padding: isReceiptPanelLoading ? '0px' : '16px' }}>
               <ReceiptPanel 
                 onFileSelect={(filename) => {
                   const file = files.find(f => f.name === filename);
@@ -593,6 +594,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                 }}
                 filesDeleted={filesDeleted}
                 onReanalysisTriggered={handleReanalysisTriggered}
+                onLoadingStateChange={setIsReceiptPanelLoading}
               />
             </div>
           </div>
