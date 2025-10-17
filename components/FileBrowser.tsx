@@ -545,82 +545,84 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
           padding: '0px 8px 16px 16px',
           height: '100vh'
         }}>
-          {/* File Name Header - Always render to prevent layout shifts */}
-          <div className="w-full" style={{ height: '56px' }}>
-            <div className="flex items-center justify-between h-full">
-              <div className="flex items-center" style={{ gap: '4px' }}>
-                <button
-                  onClick={() => setShowFileList(!showFileList)}
-                  className="save-button"
-                  style={{
-                    padding: '8px 16px',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    color: '#f2f2f2',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px'
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="9" y1="3" x2="9" y2="21"/>
-                  </svg>
-                </button>
-                <div
-                  className="text-lg font-medium bg-transparent border-none outline-none"
-                  style={{
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: selectedFile ? '#f2f2f2' : '#666',
-                    background: 'transparent',
-                    border: 'none',
-                    outline: 'none',
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: 'visible',
-                    whiteSpace: 'nowrap',
-                    fontFamily: '"Lora", serif'
-                  }}
-                >
-                  {selectedFile ? selectedFile.name : 'No file selected'}
-                </div>
-              </div>
-              <div className="flex items-center" style={{ gap: '8px' }}>
-                {selectedFile && selectedFile.extension === '.pdf' && (
+          {/* File Name Header - Only show when file is selected */}
+          {selectedFile && (
+            <div className="w-full" style={{ height: '56px' }}>
+              <div className="flex items-center justify-between h-full">
+                <div className="flex items-center" style={{ gap: '4px' }}>
                   <button
-                    onClick={handleDeselectFile}
+                    onClick={() => setShowFileList(!showFileList)}
                     className="save-button"
                     style={{
-                      padding: '4px',
-                      backgroundColor: 'transparent',
-                      border: 'none',
+                      padding: '8px 16px',
+                      fontSize: '12px',
+                      fontWeight: '500',
                       cursor: 'pointer',
-                      color: '#9ca3af',
+                      color: '#f2f2f2',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: '4px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#27272A';
-                      e.currentTarget.style.color = '#f2f2f2';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = '#9ca3af';
+                      gap: '6px'
                     }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"/>
-                      <line x1="6" y1="6" x2="18" y2="18"/>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                      <line x1="9" y1="3" x2="9" y2="21"/>
                     </svg>
                   </button>
-                )}
+                  <div
+                    className="text-lg font-medium bg-transparent border-none outline-none"
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: '#f2f2f2',
+                      background: 'transparent',
+                      border: 'none',
+                      outline: 'none',
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: 'visible',
+                      whiteSpace: 'nowrap',
+                      fontFamily: '"Lora", serif'
+                    }}
+                  >
+                    {selectedFile.name}
+                  </div>
+                </div>
+                <div className="flex items-center" style={{ gap: '8px' }}>
+                  {selectedFile.extension === '.pdf' && (
+                    <button
+                      onClick={handleDeselectFile}
+                      className="save-button"
+                      style={{
+                        padding: '4px',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#9ca3af',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        borderRadius: '4px'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#27272A';
+                        e.currentTarget.style.color = '#f2f2f2';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#9ca3af';
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* File Editor Container */}
           <div 
@@ -631,6 +633,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
               border: '1px solid #2E2E2E',
               height: '100%',
               minHeight: 0,
+              marginTop: selectedFile ? '0' : '16px',
               marginBottom: '16px'
             }}
           >
@@ -645,7 +648,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                   paddingTop: '8px',
                   paddingBottom: '8px'
                 }}>
-                  PREVIEW
+                  {selectedFile ? 'PREVIEW' : 'SUMMARY'}
                 </h2>
                 <button
                   onClick={() => setExpandedColumn(expandedColumn === 'file-editor' ? null : 'file-editor')}
@@ -680,7 +683,7 @@ export function FileBrowser({ folderPath }: { folderPath: string }) {
                 </button>
               </div>
         </div>
-            <div className="flex-1 overflow-y-auto" style={{ paddingLeft: '12px', paddingRight: '12px' }}>
+            <div className="flex-1" style={{ paddingLeft: '12px', paddingRight: '12px', overflow: 'hidden' }}>
               {selectedFile ? (
                 <FileEditor
                   selectedFile={selectedFile}

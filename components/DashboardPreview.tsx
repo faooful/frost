@@ -102,14 +102,13 @@ export function DashboardPreview({ receipts, consolidatedLineItems, totalVAT, gr
 
   return (
     <div className="h-full flex flex-col" style={{ 
-      backgroundColor: '#171717',
-      padding: '16px',
       gap: '16px',
-      overflowY: 'auto'
+      overflow: 'hidden',
+      paddingBottom: '16px'
     }}>
       {/* Total Spend Card */}
       <div style={{ 
-        backgroundColor: '#1f1f1f', 
+        backgroundColor: '#171717', 
         borderColor: '#2e2e2e',
         border: '1px solid #2e2e2e',
         borderRadius: '12px',
@@ -145,7 +144,7 @@ export function DashboardPreview({ receipts, consolidatedLineItems, totalVAT, gr
 
       {/* Category Breakdown */}
       <div style={{ 
-        backgroundColor: '#1f1f1f', 
+        backgroundColor: '#171717', 
         borderColor: '#2e2e2e',
         border: '1px solid #2e2e2e',
         borderRadius: '12px'
@@ -178,7 +177,7 @@ export function DashboardPreview({ receipts, consolidatedLineItems, totalVAT, gr
                     color: '#9ca3af',
                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
                   }}>
-                    {formatCurrency(category.total)}
+                    {category.percentage.toFixed(1)}%
                   </div>
                 </div>
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -200,13 +199,13 @@ export function DashboardPreview({ receipts, consolidatedLineItems, totalVAT, gr
                     />
                   </div>
                   <div style={{ 
-                    minWidth: '40px', 
+                    minWidth: '60px', 
                     textAlign: 'right', 
                     fontSize: '10px', 
-                    color: '#9ca3af',
+                    color: '#f2f2f2',
                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
                   }}>
-                    {category.percentage.toFixed(1)}%
+                    {formatCurrency(category.total)}
                   </div>
                 </div>
               </div>
@@ -217,10 +216,14 @@ export function DashboardPreview({ receipts, consolidatedLineItems, totalVAT, gr
 
       {/* Monthly Trend */}
       <div style={{ 
-        backgroundColor: '#1f1f1f', 
+        backgroundColor: '#171717', 
         borderColor: '#2e2e2e',
         border: '1px solid #2e2e2e',
-        borderRadius: '12px'
+        borderRadius: '12px',
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: 0
       }}>
         <div style={{ padding: '24px 24px 12px 24px' }}>
           <div style={{ 
@@ -232,44 +235,83 @@ export function DashboardPreview({ receipts, consolidatedLineItems, totalVAT, gr
             Monthly Trend
           </div>
         </div>
-        <div style={{ padding: '0 24px 24px 24px' }}>
+        <div style={{ padding: '0 24px 24px 24px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {monthlyTrend.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {monthlyTrend.map((item, index) => (
-                <div key={item.month} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{ minWidth: '60px', fontSize: '11px', color: '#9ca3af' }}>
-                    {item.month}
-                  </div>
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ 
-                      width: '100%', 
-                      height: '6px', 
-                      backgroundColor: '#2e2e2e', 
-                      borderRadius: '3px',
-                      overflow: 'hidden'
-                    }}>
-                      <div
-                        style={{
-                          width: `${(item.amount / maxMonthlyAmount) * 100}%`,
-                          height: '100%',
-                          backgroundColor: '#3b82f6',
-                          opacity: 0.7,
-                          transition: 'width 0.3s ease'
-                        }}
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+              <div style={{ position: 'relative', flex: 1, paddingTop: '20px', minHeight: '200px' }}>
+                {/* Bar graph container */}
+                <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+                  <defs>
+                    <linearGradient id="barGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.4" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Y-axis grid lines */}
+                  {[0, 25, 50, 75, 100].map((percent) => (
+                    <line
+                      key={percent}
+                      x1="0"
+                      y1={100 - percent}
+                      x2="100"
+                      y2={100 - percent}
+                      stroke="#2e2e2e"
+                      strokeWidth="0.5"
+                      strokeDasharray="2,2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  ))}
+                  
+                  {/* Bars */}
+                  {monthlyTrend.map((item, index) => {
+                    const barWidth = 80 / monthlyTrend.length;
+                    const gap = 20 / (monthlyTrend.length + 1);
+                    const x = gap + (index * (barWidth + gap));
+                    const height = (item.amount / maxMonthlyAmount) * 100;
+                    const y = 100 - height;
+                    
+                    return (
+                      <rect
+                        key={item.month}
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={height}
+                        fill="url(#barGradient)"
+                        rx="1"
                       />
-                    </div>
-                    <div style={{ 
-                      minWidth: '50px', 
-                      textAlign: 'right', 
+                    );
+                  })}
+                </svg>
+              </div>
+              
+              {/* X-axis labels */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between',
+                marginTop: '8px',
+                paddingTop: '8px',
+                borderTop: '1px solid #2e2e2e'
+              }}>
+                {monthlyTrend.map((item, index) => (
+                  <div 
+                    key={item.month}
+                    style={{ 
                       fontSize: '10px', 
-                      color: '#f2f2f2',
-                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
-                    }}>
+                      color: '#9ca3af',
+                      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                      textAlign: index === 0 ? 'left' : index === monthlyTrend.length - 1 ? 'right' : 'center',
+                      flex: 1
+                    }}
+                  >
+                    <div>{item.month}</div>
+                    <div style={{ color: '#f2f2f2', fontSize: '9px', marginTop: '2px' }}>
                       {formatCurrency(item.amount)}
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
             <div style={{ 
