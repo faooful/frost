@@ -1,8 +1,8 @@
-# Frost - AI-Powered File Browser
+# Frost - PDF Receipt Analyzer
 
-A modern Next.js application with intelligent file analysis capabilities.
+A local AI-powered tool for analyzing PDF receipts and invoices with intelligent data extraction and spending insights.
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai)
@@ -15,56 +15,54 @@ npm run ai
 ```
 This starts the Next.js app and connects to your local AI model.
 
-### Alternative Commands
-```bash
-# Using npm script
-npm run ai-start
+## Features
 
-# Using direct script
-./start-all.sh
-
-# Manual setup (if needed)
-npm install
-./start-all.sh
-```
-
-## ✨ Features
-
-- **📁 File Browser**: 3-column layout with file list, editor, and AI insights
-- **✏️ File Editor**: Create, edit, rename, and save files
-- **📄 PDF Support**: 
-  - Visual PDF preview with page navigation
-  - Automatic text extraction for AI analysis
-  - Invoice data extraction (amounts, dates, line items)
+- **Minimal Dashboard**: Overview of total spend, category breakdown, and monthly trends
+- **PDF Receipt Analysis**: 
+  - Automatic text extraction from PDF invoices
+  - AI-powered line item categorization (Maintenance, Appliance, License, etc.)
+  - Invoice data extraction (amounts, dates, VAT, totals)
   - Support for multi-page PDFs
-- **🤖 AI Analysis**: Intelligent content analysis with insights and suggestions
-- **🔒 Local Processing**: Everything runs on your machine (no external APIs)
-- **🎨 Modern UI**: Clean, responsive design with blue theme
+- **Smart Data Processing**: 
+  - Consolidates line items across all receipts
+  - Calculates totals, VAT, and category spending
+  - Generates spending insights and trends
+- **Local Processing**: Everything runs on your machine (no external APIs)
+- **Clean Interface**: Modern dark theme with intuitive navigation
 
-## 🎯 How to Use
+## How to Use
 
 1. **Start the app**: `npm run ai`
 2. **Open browser**: Go to http://localhost:3000
-3. **Select a file**: Click any file in the left column
-4. **View AI insights**: See analysis in the right column
-5. **Edit files**: Use the middle column to create/edit files
+3. **Upload PDFs**: Drag and drop receipt PDFs into the file browser
+4. **View dashboard**: See spending overview, categories, and trends
+5. **Analyze receipts**: Click any PDF to view detailed invoice data
+6. **Return to dashboard**: Click the × button to go back to overview
 
-## 🤖 AI Analysis Features
+## Dashboard Features
 
-The AI analysis provides:
-- **📋 Summary**: Brief overview of file content
-- **🔑 Key Points**: Important observations about structure and purpose
-- **💡 Insights**: Notable patterns, themes, and characteristics
-- **💭 Suggestions**: Recommendations for improvement
+The minimal dashboard shows:
+- **Total Spend**: Grand total across all receipts with count
+- **Category Breakdown**: Spending by category with progress bars and percentages
+- **Monthly Trend**: Bar chart showing spending over time
 
-## 🛠️ Tech Stack
+## AI Analysis
+
+The AI automatically:
+- **Extracts invoice data**: Amounts, dates, VAT, line items
+- **Categorizes expenses**: Maintenance, Appliance, License, Other
+- **Validates data**: Ensures VAT and totals are correctly identified
+- **Processes line items**: Individual expense breakdowns with amounts
+
+## Tech Stack
 
 - **Frontend**: Next.js 14, TypeScript, Tailwind CSS
 - **AI Model**: Gemma2:27b (27.2B parameters) via Ollama
-- **File System**: Local file operations with API endpoints
-- **Processing**: All AI analysis happens locally on your machine
+- **PDF Processing**: pdf2json for text extraction
+- **Data Storage**: Local file system with JSON caching
+- **Processing**: All analysis happens locally on your machine
 
-## 🔧 Development
+## Development
 
 ### Manual Server Management
 ```bash
@@ -75,35 +73,33 @@ ollama serve
 npm run dev
 ```
 
-### Testing AI Analysis
-```bash
-# Test through Next.js API (recommended)
-curl -X POST http://localhost:3000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"content":"your content here","filename":"test.txt"}'
+### API Endpoints
+- `GET /api/receipts/all` - Extract and analyze all PDF receipts
+- `GET /api/receipts/cache` - Get cached analysis data
+- `POST /api/files/upload` - Upload new PDF files
+- `GET /api/pdf/extract` - Extract data from individual PDFs
 
-# Test Ollama directly
-curl -X POST http://localhost:11434/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{"model":"gemma2:27b","prompt":"Analyze this content: your content here"}'
-```
-
-## 📁 Project Structure
+## Project Structure
 
 ```
 frost/
 ├── app/                    # Next.js app directory
-│   ├── api/               # API routes
+│   ├── api/               # API routes for PDF processing
 │   └── page.tsx           # Main page
 ├── components/            # React components
-│   ├── FileBrowser.tsx    # Main file browser
-│   ├── FileEditor.tsx     # File editing component
-│   └── InsightsPanel.tsx  # AI insights display
-├── data/                  # Sample files
-├── start-all.sh           # Unified startup script
-└── package.json           # Node.js dependencies
+│   ├── FileBrowser.tsx    # Main interface with dashboard
+│   ├── DashboardPreview.tsx # Minimal dashboard component
+│   ├── ReceiptPanel.tsx   # Receipt analysis display
+│   └── PDFViewer.tsx      # PDF preview component
+├── data/                  # Sample PDF receipts
+└── analysis-cache/        # Cached AI analysis results
 ```
 
-## 🎉 Enjoy!
+## Perfect For
 
-Your AI-powered file browser is ready to use! The system automatically handles all the complexity of running both the web app and AI analysis server together.
+- **Small business owners** tracking expenses
+- **Freelancers** managing receipts and invoices
+- **Anyone** wanting to analyze spending patterns from PDF receipts
+- **Local-first** users who prefer privacy over cloud services
+
+Your AI-powered receipt analyzer is ready to use! Upload your PDF receipts and get instant insights into your spending patterns.
